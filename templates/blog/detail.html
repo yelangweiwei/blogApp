@@ -1,0 +1,75 @@
+{% extends 'blog/base.html' %}
+{% block main %}
+    <article class="post post-{{ post.pk }}">
+        <header class="entry-header">
+            <h1 class="entry-title">{{ post.title }}</h1>
+            <div class="entry-meta">
+                <span class="post-category"><a href={% url 'Blog:postListOfcategories' post.category.pk %}>{{ post.category.name }}</a></span>
+                <span class="post-date"><a href={% url 'Blog:allPostByCreateTime' post.created_time.year post.created_time.month post.created_time.day %}><time class="entry-date" datetime="{{ post.created_time }}">{{ post.created_time}}</time></a></span>
+                <span class="post-author"><a href={% url 'Blog:allPostByAuthorId' post.pk %}>{{ post.author }}</a></span>
+                <span class="comments-link"><a href="#">{{ post.comments_set.count }}条评论</a></span>
+                <span class="views-count"><a href="#">{{ post.views}}阅读</a></span>
+                <span class="views-count"><a href="#">标签:</a></span>
+                {% for tag in post.tags.all %}
+                    <span class="views-count"><a href={% url 'Blog:tags' tag.pk %}>{{ tag.name }}</a></span>
+                    <span class="views-count">,</span>
+                {% endfor %}
+            </div>
+        </header>
+        <div class="entry-content clearfix">
+         {{post.body|safe}} {# 作用用于模板变量，将变量的值变为经过过滤器处理后的值#}
+        </div>
+    </article>
+    <section class="comment-area" id="comment-area">
+        <hr>
+        <h3>发表评论</h3>
+        <form action="{% url 'comments:post_comment' post.pk %}" method="post" class="comment-form">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="{{ form.name.id_for_label }}">名字：</label>
+                   {{ form.name }}  {# 自动渲染表单控件#}
+                    {{ form.name.errors }}  {# 将渲染表单对应的错误字段，django检查错误的信息，把错误的信息保存子啊errors中，模板将错误信息渲染显示 #}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ form.email.id_for_label }}">邮箱：</label>
+                   {{ form.email }}
+                    {{ form.url.errors }}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ form.url.id_for_label }}">网址：</label>
+                    {{ form.url }}
+                    {{ form.url.errors }}
+                </div>
+                <div class="col-md-12">
+                    <label for="{{ form.text.id_for_label }}">评论：</label>
+                    {{form.text}}
+                    {{form.text.errors}}
+                    <button type="submit" class="comment-btn">发表</button>
+                </div>
+            </div>    <!-- row -->
+        </form>
+        <div class="comment-list-panel">
+            <h3>评论列表，共 <span>{{ comment_count }}</span> 条评论</h3>
+            <ul class="comment-list list-unstyled">
+                {% for comment in comment_list %}
+                <li class="comment-item">
+                    <span class="nickname">{{ comment.name }}</span>
+                    <time class="submit-date">{{ comment.created_time }}</time>
+                    <div class="text">
+                        {{ comment.text }}
+                    </div>
+                </li>
+                {% empty %}
+                    暂无评论
+                {% endfor %}
+            </ul>
+        </div>
+    </section>
+{% endblock main %}
+{% block toc %}
+    <div class="widget widget-content">
+        <h3 class="widget-title">文章目录</h3>
+        {{ post.toc|safe }}
+    </div>
+{% endblock toc %}
