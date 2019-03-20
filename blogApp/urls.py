@@ -24,5 +24,7 @@ urlpatterns = [
     url(r'',include('comments.urls')),
     url(r'^all/rss/$',AllPostsRssFeed(),name='rss'),
     url(r'^search/', include('haystack.urls')),
-    url(r'^users/',include('userApp.urls'))
+    url(r'^users/',include('userApp.urls')),
+    url(r'^users/',include('django.contrib.auth.urls')),
+
 ]
