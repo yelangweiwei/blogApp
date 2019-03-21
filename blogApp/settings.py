@@ -139,6 +139,25 @@ LOGOUT_REDIRECT_URL = '/'
 LOGIN_REDIRECT_URL = '/'
 
 
+#添加有右键的设置
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.qq.com'
+EMAIL_PORT = 25
+EMAIL_HOST_USER = '3485557481@qq.com'
+EMAIL_HOST_PASSWORD = 'urywqqazigmlcjdb'
+EMAIL_USER_TLS = True
+EMAIL_FROM = '3485557481@qq.com'
+DEFAULT_FROM_EMAIL = '3485557481@qq.com'
+
+
+#编写验证的凭据,这个在登录的时候使用，第一个用来验证登录的用户名和密码是不是满足条件，第二个验证登录的邮箱地址是否满足条件
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'userApp.backends.EmailBackend',
+)
+
+
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
