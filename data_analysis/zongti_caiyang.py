@@ -5,21 +5,33 @@
 #抽样方法   1）蒙特卡洛模拟
 import seaborn
 import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
 #boostrap采样的实现
-def boostrap(data,num_sample,statistics,alpha):
-    n = len(data)
-    idx = np.random.randint(0,n,size=(num_sample,n))
-    samples = data[idx]
-    stat = np.sort(statistics(samples,1))
-    return (stat[int((alpha/2)*num_sample)],stat[int((1-alpha/2)*num_sample)])
+def boostrap_sample():
+    data = seaborn.load_dataset('iris')
+    # seaborn.distplot(data['sepal_length'],color='gray')
+
+    boost_sample = []
+    for i in range(1000):
+        boost_sample.append([])
+    boost_mean = []
+    for i in range(1000):
+        boost_sample[i].append(pd.Series.sample(data['sepal_length'],replace=True))
+        sample_data = pd.Series.sample(data['sepal_length'],replace=True)
+        boost_mean.append(np.mean(sample_data))
+    seaborn.distplot(boost_mean,color='gray')
+    #求置信区间
+    print(boost_mean)
+    start_percentile = np.percentile(boost_mean,2.5)
+    end_percentile = np.percentile(boost_mean,97.5)
+    print([start_percentile,end_percentile])
+    plt.show()
+
+
 
 if __name__ == '__main__':
-    data = seaborn.load_dataset('iris')
-    data1,data2 = boostrap(data, 2, data, 1)
-    print(data1)
-    print(data2)
-
-
+    boostrap_sample()
 
 
 
