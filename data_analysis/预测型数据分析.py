@@ -20,6 +20,7 @@ from sklearn import datasets
 import matplotlib.pyplot as plt
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import LabelEncoder
+from sklearn.neighbors import KNeighborsClassifier
 
 def linearRegression_pratice():
     #读取数据,展示数据
@@ -211,10 +212,142 @@ def rand_forest():
     score = -cross_val_score(rf, X, y, cv=5, scoring='neg_mean_squared_error')
     print('rand_forest:', py.mean(score))
 
+#kd k近邻理论和实践
+'''
+1)使用交叉验证的方法，选择k的最优值；k较小时，近似误差会减小，但是整体的复杂度升高，容易过拟合；k较大时，减小估计误差，但是近似误差会变大，整体变的简单，容易忽略细节的问题  
+2）计算距离，使用曼哈顿或者欧式距离算法
+3）决策一般就是：少数服从多数
+
+'''
+from sklearn.model_selection import train_test_split
+def kd_tree():
+    iris = datasets.load_iris()
+    print(iris.data.shape)
+    #对数据集进行分割，要做到随机采样，避免相同特征的数据聚集在一起
+    #random_state:种子不同，获得的随机种子数不同，种子相同，实例不同，获得的随机种子数也相同，范围是0-2^32
+    x_train,x_test,y_train,y_test = train_test_split(iris.data,iris.target,test_size=0.25,random_state=33)
+    print('x_train:',x_train.shape)
+    print('x_test:',x_test.shape)
+    print('y_train:',y_train.shape)
+    print('y_test:',y_test.shape)
+
+
+    #分类模型
+    #导入数据标准化模块
+    from sklearn.preprocessing import StandardScaler
+
+    #标准换数据训练集
+    '''
+    1)统一资料中自变量或特征范围的方法。
+    2）特征标准化，是各特征依照比例影响距离；第二个理由是：能加速梯度下降法的收敛
+    3）(x-min)/(max-min)
+    4）资料标准化后，使每个特征好着呢个的数值平均变为0（将每个特征值减去原来资料中的该特征的平均），标准差变为1
+    '''
+    ss = StandardScaler()
+    x_train = ss.fit_transform(x_train)
+
+    #标准化测试集
+    x_test = ss.fit_transform(x_test)
+
+    #knn分类器赋给变量
+    knn = KNeighborsClassifier(algorithm='kd_tree')
+
+    model = knn.fit(x_train,y_train)
+    y_predict = model.predict(x_test)
+    print(y_test)
+    print(y_predict)
+    #检测模型的准确性
+    accuracy_result = [y_test[i]  for i in range(len(y_predict)) if y_test[i]==y_predict[i]]
+    print(list(accuracy_result))
+    print('accuracy:',len(accuracy_result)/len(y_test))
+
+
+#knn的理论实践
+from numpy import *
+import operator #运算符模块，执行排序操作时用到
+
+def createDataset():
+    group = array([[1.0,1.1],[1.0,1.0],[0,0],[0,0.1]])
+    labels = ['A','A','B','B']
+    return (group,labels)
+
+#简单分类
+def classify0(inX,dataSet,labels,k):
+    #shape[0]得到矩阵的行数，shape[1] 得到列数
+    dataSetSize = dataSet.shape[0]
+    #tile()得到和dataset相同的维数，进行相减
+    diffMat = tile(inX,(dataSetSize,1))-dataSet
+    print(diffMat)
+
+    #各向量相减后平方
+    sqDiffMat = diffMat**2
+
+    #axis = 1按行求和，得到平方和
+    sqDistances = sqDiffMat.sum(axis=1)
+
+    #开根号，求得输入向量和训练集各向量的欧式距离
+    distances = sqDistances**0.5
+
+    #得到各距离索引值，是升序，即最小距离到最大距离
+    sortedDistIndicies = distances.argsort()
+
+    classCount = {}
+
+    for i in range(k):
+        #前k个最小的距离的标签
+        voteIlabel = labels[sortedDistIndicies[i]]
+        #累计投票数
+        classCount[voteIlabel] = classCount.get(voteIlabel,0)+1
+    print('classCount:',classCount)
+
+    #把分类后的结果进行排序，然后返回得票多的分类的结果
+    #其中的iteitems()把字典分解为元组列表，itemgetter(1)按照第二个元素的次序对元组排序
+    sortedClassCount = sorted(classCount.items(),key=operator.itemgetter(1),reverse=True)
+
+    print(sortedClassCount)
+    #输出分类标签
+    return sortedClassCount[0][0]
+
+#随机森林
+'''
+1)集成学习和决策树于一身，优点：在随机森林算法中每棵树都尽可能最大成都的 生长，并没有剪枝过程
+2）两个随机性：随机选择样本，随机的选择特征进行训练。这样使得随机森林不容易陷入过拟合，并且具有很好的抗噪能力
+'''
+
+#决策树和迭代决策树
+'''
+1)性能良好，与训练数据矛盾较小，2）泛化能力好；对训练数有很好的分类效果，对测试集有较低的误差率
+
+三步骤：1）特征选择，2）决策树的生成 3）决策树的剪枝
+
+ID3:核心：在决策树各个节点上应用信息增益准则选择特征，每一次都选择使得信息增益最大的特征进行分裂，递归的构建决策树
+使用信息增益划分数据：缺点：选择取值比较多的特征，会具有较大的信息增益，ID3偏向于取值较多的特征
+
+C4.5:根据信息增益比来选择特征
+CART:指分类回归树。使用平方误差最小化作为选择特征的准则，用作分类树时采用基尼指数最小化，进行特征选择，递归的生成二叉树
+
+剪枝：
+1）决策树在生成过程中使用贪婪的方法来选择特征，从而达到对训练数据进行更好的拟合；剪枝是为了简化模型的复杂度，防止决策树过拟合问题
+
+
+GBDT（迭代决策树）：是机器学习中常用的一种机器学习算法，
+1）使用这个的目的是为了防止过拟合，过拟合让训练精度更高；这个不容易陷入过拟合，而且能达到更高的精度
+
+'''
+
+
 
 if __name__ == '__main__':
     # linear_regression()
     # kNN_pratice()
-    decision_tree()
+    # decision_tree()
     # rand_forest()
+    # kd_tree()
 
+
+    group,labels = createDataset()
+    print('training data set:',group)
+    print('labels of training data set:',labels)
+    #简单分类
+    tt = classify0([0,0],group,labels,3)
+    print('classification results:',tt)

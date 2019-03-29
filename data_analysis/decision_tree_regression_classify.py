@@ -53,9 +53,46 @@ def decision_regression():
     plt.legend()
     plt.show()
 
+from sklearn.model_selection import train_test_split
+from sklearn.datasets import load_iris
+def decision_tree_structer():
+
+    iris = load_iris()
+    x = iris.data
+    y = iris.target
+    x_train,x_test,y_train,y_test = train_test_split(x,y,random_state=0)
+    estimator = DecisionTreeClassifier(max_leaf_nodes=3,random_state=0)
+    estimator.fit(x_train,y_train)
+
+    n_nodes = estimator.tree_.node_count
+    print('n_nodes:',n_nodes)
+    child_left = estimator.tree_.children_left
+    print('child_left:',child_left)
+    child_right = estimator.tree_.children_right
+    print('child_right:',child_right)
+    feature = estimator.tree_.feature
+    print('feature:',feature)
+    threshold = estimator.tree_.threshold
+    print('threshold:',threshold)
+
+    node_depth = py.zeros(shape=n_nodes,dtype=py.int64)
+    is_leaves = py.zeros(shape=n_nodes,dtype=bool)
+    stack = [(0,-1)]  #seed is the root node id and its parent depth
+    while len(stack)>0:
+        node_id,parent_depth = stack.pop()
+        node_depth[node_id] = parent_depth+1
+
+        if (child_left[node_id]!=child_right[node_id]):
+            stack.append((child_left[node_id],parent_depth+1))
+            stack.append((child_right[node_id],parent_depth+1))
+        else:
+            is_leaves[node_id]=True
+
+
+
 
 
 
 
 if __name__=='__main__':
-    decision_regression()
+    decision_tree_structer()
