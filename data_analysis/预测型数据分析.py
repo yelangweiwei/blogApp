@@ -333,7 +333,120 @@ CART:指分类回归树。使用平方误差最小化作为选择特征的准则
 GBDT（迭代决策树）：是机器学习中常用的一种机器学习算法，
 1）使用这个的目的是为了防止过拟合，过拟合让训练精度更高；这个不容易陷入过拟合，而且能达到更高的精度
 
+决策树：量化纯度的方法：熵，gini,错误率，一般使用熵公式
+纯度差：也称为信息增益
+
+过度拟合的原因：1）噪音数据，在训练的数据中噪声的数据很多  2）缺少代表性的数据，导致某一类的数据不能很好的匹配，这一点可以通过混淆矩阵分析得出
+3）多重比较：
+
+优化的方案：
+1）修剪枝叶：
+a)前置裁剪：在构建决策树之前就停止，切分节点的条件很苛刻，导致决策树很短小，结果就是决策树无法达到最优，
+b)后置裁剪：决策树构建好之后，才开始裁剪，1）用单一的叶子节点代替整个子树，叶子节点的分类采用子类中最主要的分类；2）将一个子树代替另一棵树；有些浪费
+优化方案2：
+k折交叉验证：首先计算出整体的决策树，子节点个数记做N，设i属于[1,N],对每个i使用交叉验证，并裁剪到i个节点，计算错误率，最后求出平均错误率，这样可以用具有最小错误率的对应的i
+作为最终决策树的大小，对原始决策树进行裁剪，得到最优的决策树
+
+优化方案3:随机森林
+random forest 用训练数据随机的计算出许多决策树，形成一个森林，然后使用森林对未知的数据进行预测，选取投票最多的分类；这个得到的错误率经过了进一步的降低。
+
+
+准确率的估计：使用统计学中的置信区间
+
 '''
+
+
+#随机森林
+'''
+1）随机森林的分类效果  a)森林中任意两棵树的相关性越强，错误率越大  b)森林中的树的分类能力越强，整个森林的错误率越低
+2）特征的选择m，m减小，树的相关性和分类能力会下降，变大，两者也会增大
+
+
+'''
+
+
+#聚类算法：（k均值，DBSCAN）
+'''
+1)聚类是无监督学些，本质是抖索数据结构的关系，常用于对客户细分，对文章聚类。
+分类：已知有哪些标签进行分类，已知存在有哪些类别。
+
+kmeans:
+这种算法适用于：数据集呈现数圆形和球形分布的数据，如果数据没有呈现出这种规律，很可能聚类的效果很差
+'''
+from sklearn.cluster import KMeans
+def kmean_pratice():
+    #读取数据
+    iris = pd.read_csv('http://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data',header=None)
+    iris.columns = ['SepalLengthCm', 'SepalWidthCm', 'PetalLengthCm', 'PetalWidthCm', 'Species']
+
+    g = seaborn.FacetGrid(iris, hue='Species')
+    g.set(xlim=(0, 3), ylim=(0, 9))
+    g.map(plt.scatter, 'PetalWidthCm', 'PetalLengthCm')
+    g.add_legend()
+
+
+    #使用模型训练
+    k= 3
+    km = KMeans(k)   #k为聚簇的数目
+    #使用的数据
+    x = iris[['PetalWidthCm','PetalLengthCm']]
+    km.fit(x)
+    iris['cluster_k3'] = km.predict(x)
+    print(iris['cluster_k3'])
+
+    # 探索数据分析
+    g = seaborn.FacetGrid(iris, hue='cluster_k3')
+    g.set(xlim=(0, 3), ylim=(0, 9))
+    g.map(plt.scatter, 'PetalWidthCm', 'PetalLengthCm')
+    g.add_legend()
+    plt.show()
+
+#DBSCAN  基于密度的聚类方法
+
+from pandas import DataFrame
+from sklearn.cluster import DBSCAN
+def descan_pratice():
+    # 读取数据
+    iris = pd.read_csv('http://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data', header=None)
+    iris.columns = ['SepalLengthCm', 'SepalWidthCm', 'PetalLengthCm', 'PetalWidthCm', 'Species']
+
+    noisy_circles = datasets.make_circles(n_samples=1000,factor=0.5,noise=0.05)
+    print(noisy_circles)
+
+    df = DataFrame()
+    df['x1'] = noisy_circles[0][:,0]
+    df['x2'] = noisy_circles[0][:,1]
+    df['label'] = noisy_circles[1]
+    df.sample(10)
+
+    #探索性数据分析
+    g = seaborn.FacetGrid(df,hue='label')
+    g.map(plt.scatter,'x1','x2')
+    g.add_legend()
+
+
+    #使用dbscan
+    dbscan = DBSCAN(eps=0.2,min_samples=10)
+    x = df[['x1','x2']]
+    dbscan.fit(x)
+    df['dbscan_label'] = dbscan.labels_
+    g = seaborn.FacetGrid(df,hue='dbscan_label')
+    g.map(plt.scatter,'x1','x2')
+    g.add_legend()
+
+    #使用kmean
+    km = KMeans(2)
+    x = df[['x1','x2']]
+    km.fit(x)
+    df['kmeans_label'] = km.predict(x)
+    g = seaborn.FacetGrid(df,hue='kmeans_label')
+    g.map(plt.scatter,'x1','x2')
+    g.add_legend()
+
+    plt.show()
+
+
+
 
 
 
@@ -345,9 +458,10 @@ if __name__ == '__main__':
     # kd_tree()
 
 
-    group,labels = createDataset()
-    print('training data set:',group)
-    print('labels of training data set:',labels)
-    #简单分类
-    tt = classify0([0,0],group,labels,3)
-    print('classification results:',tt)
+    # group,labels = createDataset()
+    # print('training data set:',group)
+    # print('labels of training data set:',labels)
+    # #简单分类
+    # tt = classify0([0,0],group,labels,3)
+    # print('classification results:',tt)
+    kmean_pratice()
