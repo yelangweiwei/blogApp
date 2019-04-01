@@ -402,14 +402,31 @@ def kmean_pratice():
     plt.show()
 
 #DBSCAN  基于密度的聚类方法
+'''
+1)目的：在于过滤低密度区域，发现稠密度样本点，跟传统的基于层次的聚类和划分聚类的凸形聚类簇不同，改算法可以发现任意形状的聚类簇。
+2）特点：
+a)基于密度的特点是不依赖距离，依赖于密度，从而客服基于距离的算法只能发现球形聚簇的缺点
+3）核心思想是：从某个核心触发，不断向密度可达的区域扩张，从而得到一个包含核心点的最大化区域，区域中的热议两点密度相连
+
+优点：
+1）克服基于距离的算法，只能发现类圆形的聚类的缺点
+2）可发现任意形状的聚类，且对噪声不敏感
+3）不需要指定类的数目
+4）算法中只有两个参数，扫描半径和最小包含的点数
+缺点：
+1）计算复杂，不进行任何优化时，事件的复杂度是O(N^2),通常可利用R-tree,K-d tree ball tree 索引来加速计算，并将算法的复杂度降低为O(NLog(N))
+2）受eps影响大，数据分布密度不均匀时，密度小的cluster会被划分到多个性质相似的cluster,eps较大；会使距离较近，且密度较大的cluster被合并成一个cluster，在高维数据时，因为维数灾难问题，eps的选取比较困难
+3）会依赖距离公式的选择，距离 标量标准不重要
+4）不适合数据集集中密度差异很大的，因为eps和metric选取困难
+
+'''
+
+
 
 from pandas import DataFrame
 from sklearn.cluster import DBSCAN
 def descan_pratice():
-    # 读取数据
-    iris = pd.read_csv('http://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data', header=None)
-    iris.columns = ['SepalLengthCm', 'SepalWidthCm', 'PetalLengthCm', 'PetalWidthCm', 'Species']
-
+    #生成圆形的随机样本，n_samples长程样本点个数，factor：是内圆和外圆比例有因子，noise:高斯噪声标准差
     noisy_circles = datasets.make_circles(n_samples=1000,factor=0.5,noise=0.05)
     print(noisy_circles)
 
@@ -417,13 +434,13 @@ def descan_pratice():
     df['x1'] = noisy_circles[0][:,0]
     df['x2'] = noisy_circles[0][:,1]
     df['label'] = noisy_circles[1]
-    df.sample(10)
+    temp = df.sample(10)  #采样点，取10个点
 
     #探索性数据分析
-    g = seaborn.FacetGrid(df,hue='label')
-    g.map(plt.scatter,'x1','x2')
-    g.add_legend()
-
+    # g = seaborn.FacetGrid(temp,hue='label')
+    # g.map(plt.scatter,'x1','x2')
+    # g.add_legend()
+    # plt.show()
 
     #使用dbscan
     dbscan = DBSCAN(eps=0.2,min_samples=10)
@@ -446,6 +463,64 @@ def descan_pratice():
     plt.show()
 
 
+from sklearn.metrics.pairwise import euclidean_distances
+def DBSCN_Python():
+
+    #获得数据
+    noisy_circles = datasets.make_circles(n_samples=1000, factor=0.5, noise=0.05)
+    print(noisy_circles)
+    df = DataFrame()
+    df['x1'] = noisy_circles[0][:, 0]
+    df['x2'] = noisy_circles[0][:, 1]
+    df['label'] = noisy_circles[1]
+
+    #
+    eps = 0.2
+    MinPts = 5
+
+    ptses = []
+    dist = euclidean_distances(df)
+
+    for row in dist:
+        #密度
+        density = py.sum(row<eps)
+        pts =0
+        if density>MinPts:
+            pts=1
+        elif density>1:
+            pts = 2
+        else:
+            pts = 0
+        ptses.append(pts)
+
+    #把噪声点过滤掉，因为噪声点无法聚类，独自一类
+    corePoints = df[pd.Series(ptses)!=0]
+    coreDist = euclidean_distances(corePoints)
+
+    #首先每个点的邻域都作为一类
+    #邻域
+    #空间中任意一点的邻域是以该点为圆心，以eps为半径的原区域内包含的点的集合
+    cluster = dict()
+    i = 0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -464,4 +539,4 @@ if __name__ == '__main__':
     # #简单分类
     # tt = classify0([0,0],group,labels,3)
     # print('classification results:',tt)
-    kmean_pratice()
+    descan_pratice()
