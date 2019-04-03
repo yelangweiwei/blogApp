@@ -465,7 +465,6 @@ def descan_pratice():
 
 from sklearn.metrics.pairwise import euclidean_distances
 def DBSCN_Python():
-
     #获得数据
     noisy_circles = datasets.make_circles(n_samples=1000, factor=0.5, noise=0.05)
     print(noisy_circles)
@@ -502,27 +501,33 @@ def DBSCN_Python():
     #空间中任意一点的邻域是以该点为圆心，以eps为半径的原区域内包含的点的集合
     cluster = dict()
     i = 0
+    for row in coreDist:
+        cluster[i] = py.where(row<eps)[0]
+        i+=1
+
+    #将有交集的领域，合并为新的领域
+    for i in range(len(cluster)):
+        for j in range(len(cluster)):
+            if len(set(cluster[j])&set(cluster[i]))>0 and i!=j:
+                cluster[i] = list(set(cluster[i])|set(cluster[j]))
+                cluster[j] = list()
+
+    #最后，找出独立（没有交集）的领域，就是我们最后的聚类的结果
+    result = dict()
+    j = 0
+    for i in range(len(cluster)):
+        if len(cluster[i])>0:
+            result[j] =cluster[i]
+            j+=1
+
+    #找出每个点所在领域的徐还要，作为他们最后聚类结果的标记
+    for i in range(len(result)):
+        for j in result[i]:
+            df.at[j,'type']= i
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    plt.scatter(df['x'],df['y'],c=df['type'])
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -539,4 +544,4 @@ if __name__ == '__main__':
     # #简单分类
     # tt = classify0([0,0],group,labels,3)
     # print('classification results:',tt)
-    descan_pratice()
+    DBSCN_Python()
