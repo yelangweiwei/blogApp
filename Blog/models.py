@@ -5,11 +5,8 @@ from django.contrib.auth.models import User
 from django.utils.six import python_2_unicode_compatible
 from django.urls import reverse
 from django.utils.html import strip_tags
-
-
+from django.db.models.deletion import CASCADE
 # Create your models here.
-
-
 #分类
 @python_2_unicode_compatible
 class Category(models.Model):
@@ -33,13 +30,12 @@ class Post(models.Model):
     modified_time = models.DateTimeField()
     #文章摘要，可以没有文章摘要，在默认情况下，charfield可以为空
     excerpt = models.CharField(max_length=200,blank=True)
-
     #分类和标签，数据库表关联起来
-    category = models.ForeignKey(Category)
+    category = models.ForeignKey(Category,on_delete=CASCADE)
     tags = models.ManyToManyField(Tag,blank=True)
 
     #文章的作者是经过认证的用户
-    author = models.ForeignKey(User)
+    author = models.ForeignKey(User,on_delete=CASCADE)
     #用于记录阅读量
     views = models.PositiveIntegerField(default=0)#只允许为整数或者为0
     def increase_view(self):
