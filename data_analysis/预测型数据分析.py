@@ -524,8 +524,6 @@ def DBSCN_Python():
     for i in range(len(result)):
         for j in result[i]:
             df.at[j,'type']= i
-
-
     plt.scatter(df['x'],df['y'],c=df['type'])
     plt.show()
 
