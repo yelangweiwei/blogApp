@@ -89,13 +89,122 @@ def binarizer():
 '''
 对定性特征哑编码
     1）由于iris数据集的特征皆为定量特征，故使用其目标值进行哑编码、
-    2）定性特征：
+'''
+from sklearn.preprocessing import OneHotEncoder
+def oneHotEncoder():
+    iris = load_iris()
+    oneHot = OneHotEncoder()
+    result = oneHot.fit_transform(iris.target.reshape(-1,1))
+    print(result)
+
+'''
+缺失值计算：
+    1)在iris数据集中添加缺失值，使用preprocessing库的imputer 类对数据进行缺失值的计算
+    2)缺失值计算：返回值为计算缺失值后的数据
+    3）参数missing_value为缺失值的表示形式，默认为NaN
+    4)参数strategy为缺失值的填充方式，默认为mean
+'''
+from numpy import vstack,array,nan
+from sklearn.preprocessing import Imputer
+
+def imputer():
+     iris = load_iris()
+     imputerH = Imputer()
+     result = imputerH.fit_transform(vstack((array([nan,nan,nan,nan]),iris.data)))
+     #把补充的值打印出来
+     print(result[0,:])  #[5.84333333 3.054      3.75866667 1.19866667]  这是均值的结果
+
+    #使用中值
+     imputerH = Imputer(strategy='median')
+     result = imputerH.fit_transform(vstack((array([nan, nan, nan, nan]), iris.data)))
+     print(result[0, :]) #[5.8  3.   4.35 1.3 ]
+
+     #使用频率
+     imputerH = Imputer(strategy='most_frequent')
+     result = imputerH.fit_transform(vstack((array([nan, nan, nan, nan]), iris.data)))
+     print(result[0, :])  #[5.  3.  1.5 0.2]
+
+'''
+数据变换：
+    1）常见的数据变换基于多项式，基于指数函数的，基于对数函数的。
+'''
+from sklearn.preprocessing import PolynomialFeatures
+def polynomialFeature():
+    iris = load_iris()
+
+    #多现实转换，参数degree为度，默认值是2
+    poly = PolynomialFeatures()
+    result = poly.fit_transform(iris.data)
+    print(result)
+
+    #基于单变元函数的数据变换可以使用一个统一的方式完成，使用preprocessing库的FunctionTransformer对数据进行对数函数转换的代码：
+    
+    from numpy import log1p
+    from sklearn.preprocessing import FunctionTransformer
+    
+    #自定义转换函数对数函数的数据转换
+    #第一个参数是单变元函数
+    fun = FunctionTransformer(log1p)
+    result = fun.fit_transform(iris.data)
+    print(result)
+
+
+#特征选择
+'''
+数据预处理后，需要将有意义的特征输入机器学习的算法进行算法和模型进行训练
+1）方面1：特征是否发散；如果一个特征不发散，例如方差接近0，就是在这个特征上基本没有差异，这个特征对于样本的区分并没有用
+2）方面2：特征与目标的相关性：与目标的相关性高的特征，应当优先选择，除了方差外，还有相关性
+3）根据特征选择的形式，可以将特征选择方法分为3种：
+    （1）Filter:过滤法，按照发散性或者相关性，对各个特征进行评分，设定阈值或者选择阈值的个数，选择特征
+    （2）wrapper:包装法，根据目标函数（通常涉及预测效果评分），每次选择若干特征，或者排除若干特征；
+    （3）Embedded:嵌入法，先使用某些机器学习的算法和模型进行训练，得到各个特征的权值系数，根据系数从大到小选择特征。类似于过滤方法，这个就是通过训练来确定特征的优劣。
 '''
 
+'''
+过滤方法：
+1）方差选择
+    使用方差选择方法，先计算各个特征的方差，根据阈值，选择方差大于阈值的特征。
+'''
+from sklearn.feature_selection import VarianceThreshold
+def varianceThreshold():
+    iris = load_iris()
+    #方差选择法，返回值为特征选择后的数据
+    #参数threshold为方差的阈值
+    vaH = VarianceThreshold(threshold=3)
+    print(iris.data)
+    result = vaH.fit_transform(iris.data)
+    #将大于阈值的那一列的特征数值打印出来
+    print(result)
+
+'''
+相关系数法：
+    使用相关系数法，先要计算各个特征对目标值的相关系数以及相关系数的P值。
+'''
+from sklearn.feature_selection import SelectKBest
+from scipy.stats import pearsonr
+def selectkBest():
+    iris = load_iris()
+    #选择k个最好特征，返回选择特征后的数据
+    #第一个参数为计算评估特征是否好的函数，该函数输入特征矩阵和目标向量，输出二元组（平分，p值）的数组，数组第i项为评分和p值，在此定义为计算相关系数
+    skb = SelectKBest(lambda X,Y:array(list(map(lambda  x:pearsonr(x,Y),X.T))).T,k=2)
+    result = skb.fit_transform(iris.data,iris.target)
+    print(result)
 
 
+
+
+
+
+from pandas import Series
 if __name__=='__main__':
     # minMaxScaler()
     # normalize()
-    binarizer()
+    # binarizer()
+    # oneHotEncoder()
+    # imputer()
+    # polynomialFeature()
+    # varianceThreshold()
+    selectkBest()
+
+
 
