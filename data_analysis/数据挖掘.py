@@ -68,9 +68,9 @@ import numpy as np
 #部分并行处理，继承FeatureUnoin,这些和FeatureUnion的不同之处是：在取值的时候，选择了需要的列
 class FeatureUnoinExt(FeatureUnion):
     #相比FeatureUnoin，多了idx_list参数，其表示每个并行工作需要读取的特征矩阵的列
-    def __init__(self,transformer_list,idx_list,n_jobs=1,transformer_weight=None):
+    def __init__(self,transformer_list,idx_list,n_jobs=1,transformer_weights=None):
         self.idx_list = idx_list
-        FeatureUnion.__init__(self,transformer_list=map(lambda trans:(trans[0],trans[1]),transformer_list),n_jobs=n_jobs,transformer_weights=transformer_weight)
+        FeatureUnion.__init__(self,transformer_list=map(lambda trans:(trans[0],trans[1]),transformer_list),n_jobs=n_jobs,transformer_weights=transformer_weights)
 
     #由于只部分读取特征矩阵，方法fit需要重构
     def fit(self,X,y=None):
@@ -126,6 +126,7 @@ def fearureUnionExt_T():
     #参数transformer_list 为需要并行处理的对象列表，改列表为二元组列表，第一元为对象的名称，第二元为对象
     #参数idx_list 为相应的需要读取的特征矩阵的列
     step2 = ('FeatureUnoinExt',FeatureUnoinExt(transformer_list=[step2_1,step2_2,step2_3],idx_list=[[0],[1,2,3],[4]]))
+    return step2
 
 
 '''
