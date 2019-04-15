@@ -3,6 +3,7 @@
 原理：
     使用Gini指数表示节点的纯度，Gini指数越大，纯度越低。然后计算每个节点的Gini指数--子节点的Gini指数之和，记做Gini decrease.最后将所有树
     上相同那个特征节点的Gini decrease加权的和记为Gini importance.该数值会在0-1之间，该数值越大，即代表该节点（特征）重要性越大。
+    基尼系数代表了模型的不纯度，基尼系数越小，则不纯度越低，特征越好。
 参数计算：
     Gini index:衡量决策树每一棵树上的节点上面所存在的数据的纯净度的一个指标，这个值越小，纯净度越高。
     公式：Gini(p) = sum(pi*(1-pi)) = 1-sum(pi^2);pi是节点内各个特征所占的概率
@@ -128,20 +129,59 @@ def lasso_t():
     le = LabelEncoder()
     le.fit(iris['Species'])
     y = np.array(le.transform(iris['Species']))
-
     #模型
     lm = linear_model.Lasso(0.02)
     lm.fit(x,y)
     print(lm.coef_)
 
 
+'''
+feature importance with forests of trees
+'''
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_classification
+from sklearn.ensemble import ExtraTreesClassifier
+def forests_feature_importance():
+    # print(__doc__)
+    #build a classification task using 3 informative features
+    # 功能是：生成样本集
+    x ,y = make_classification(n_samples=1000,   #采样的数量
+                               n_features=10,      #特征个数=n_informative+n_redundant+n_repeated
+                               n_informative=3,  #多信息特征的个数
+                               n_redundant=0,      #冗余信息，informative特征的随机组合
+                               n_repeated=0,       #重复信息，随机提取n_informative 和n_redundant
+                               n_classes=2,         #分类类别
+                               random_state=0,
+                               shuffle=False)
+    #build a forest and compute the feature importance
+    forest = ExtraTreesClassifier(n_estimators=250,random_state=0)
+
+    forest.fit(x,y)
+    importances = forest.feature_importances_
+    std = np.std([tree.feature_importances_ for tree in forest.estimators_],axis=0)
+    indices = np.argsort(importances)[::-1]
+
+    #print the feature ranking
+    print('Feature ranking:')
+
+    for f in range(x.shape[1]):
+        print('%d. feature %d (%f)'%(f+1,indices[f],importances[indices[f]]))
+
+    #plot the feature importance of the forest
+    plt.figure()
+    plt.title('Feature importances')
+    plt.bar(range(x.shape[1]),importances[indices],color='r',yerr=std[indices],align='center')
+    plt.xticks(range(x.shape[1]),indices)
+    plt.show()
 
 
 
 if __name__=='__main__':
     # gini_importance_t()
     # decrease_accuracy_te()
-    lasso_t()
+    # lasso_t()
+    forests_feature_importance()
 
 
 
