@@ -144,6 +144,40 @@ def model_select_coef():
     print(pretty_print_linear(coefs))
 
 
+'''
+正则化模型
+    1）正则化就是把额外的约束或者惩罚项加到已有的模型（损失函数）上，以防止过拟合并提高泛化呢你。损失函数由原来的E(X,Y)变为E(X,Y)+alpha||w||,
+    w是模型系数组成的向量（有些地方叫做参数parameter,coeffieients）||.||一般是L1或则L2范数，alpha是一个可调的参数，控制着正则化的强度。
+    当用线性模型时，L1正则化和L2正则化也成为Lasso和Ridge.
+
+L1正则化/Lasso
+    1)L1正则化经系数w的l1范数作为惩罚项加到损失函数上，由于正则项非零，这就迫使那些弱的特征所对应的系数变为0,。因此L1正则化往往会使用学到的墨西哥很稀疏
+    因为系数w经常为0.这个特征使得L1正则化则称为一种很好的特征选择方法。
+lasso:（套索算法）
+    通过构造一个惩罚函数得到一个较为精炼的模型，使得它耶稣一些回归系数，即强制系数绝对值之和小于某个固定值，同时设定一些回归系数为零，因此保留了子集收缩的优点，
+    是一种处理具有复共线性数据的有偏估计。
+StandardScaler:
+    在训练模型的时候，要输入features,也叫特征，对于同一个特征，不同的样本中的取值可能相差很大，一些异常小或者异常大的数据误导模型的正确训练；另外，如果数据分布很分散
+    也会影响训练结果。以上两种情况都体现方差非常大，此时，我们可以将特征中的值进行标准化，即转化为均值为0，方差为1的正态分布。
+    
+'''
+from sklearn.linear_model import Lasso
+from sklearn.preprocessing import StandardScaler
+from sklearn.datasets import load_boston
+def lass0_t():
+    #加载波士顿房价
+    boston = load_boston()
+    #标准化数据，
+    scaler = StandardScaler()
+    x = scaler.fit_transform(boston['data'])
+    y = boston['target']
+    names = boston['features']
+    #alpha的作用：
+    lasso= Lasso(alpha=0.3)
+    lasso.fit(x,y)
+    print('lasso model',pretty_print_linear(lasso.coef_,names,sort=True))
+
+
 
 
 
@@ -151,4 +185,5 @@ if __name__=='__main__':
     # pearson_t()
     # mic_t()
     # dis_euc()
-    model_based_ranking()
+    # model_based_ranking()
+    lass0_t()
