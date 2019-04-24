@@ -132,7 +132,7 @@ def model_select():
 
 #a helper method for pretty_printing linear models
 def pretty_print_linear(coefs,names=None,sort=False):
-    if names==None:
+    if all(names)==None:
         names = ['X%s'% x for x in range(len(coefs))]
     lst = zip(coefs,names)
     if sort:
@@ -151,10 +151,10 @@ def model_select_coef():
     当用线性模型时，L1正则化和L2正则化也成为Lasso和Ridge.
 
 L1正则化/Lasso
-    1)L1正则化经系数w的l1范数作为惩罚项加到损失函数上，由于正则项非零，这就迫使那些弱的特征所对应的系数变为0,。因此L1正则化往往会使用学到的墨西哥很稀疏
+    1)L1正则化经系数w的l1范数作为惩罚项加到损失函数上，由于正则项非零，这就迫使那些弱的特征所对应的系数变为0,。因此L1正则化往往会使用学到的模型很稀疏
     因为系数w经常为0.这个特征使得L1正则化则称为一种很好的特征选择方法。
 lasso:（套索算法）
-    通过构造一个惩罚函数得到一个较为精炼的模型，使得它耶稣一些回归系数，即强制系数绝对值之和小于某个固定值，同时设定一些回归系数为零，因此保留了子集收缩的优点，
+    通过构造一个惩罚函数得到一个较为精炼的模型，使得它的一些回归系数，即强制系数绝对值之和小于某个固定值，同时设定一些回归系数为零，因此保留了子集收缩的优点，
     是一种处理具有复共线性数据的有偏估计。
 StandardScaler:
     在训练模型的时候，要输入features,也叫特征，对于同一个特征，不同的样本中的取值可能相差很大，一些异常小或者异常大的数据误导模型的正确训练；另外，如果数据分布很分散
@@ -164,6 +164,14 @@ StandardScaler:
 from sklearn.linear_model import Lasso
 from sklearn.preprocessing import StandardScaler
 from sklearn.datasets import load_boston
+
+def pretty_print_linear(coefs,names=None,sort=False):
+    if all(names)==None:
+        names = ['X%s'% x for x in range(len(coefs))]
+    lst = zip(coefs,names)
+    if sort:
+        lst = sorted(lst,key=lambda x:-np.abs(x[0]))
+    return '+'.join('%s * %s'%(round(coef,3),name) for coef,name in lst)
 def lass0_t():
     #加载波士顿房价
     boston = load_boston()
@@ -171,8 +179,8 @@ def lass0_t():
     scaler = StandardScaler()
     x = scaler.fit_transform(boston['data'])
     y = boston['target']
-    names = boston['features']
-    #alpha的作用：
+    names = boston['feature_names']
+    #alpha的作用：通过系数来压缩维度，从而降低维度，达到减小维度复杂度的目的。（有不同意见的请回应，谢谢）
     lasso= Lasso(alpha=0.3)
     lasso.fit(x,y)
     print('lasso model',pretty_print_linear(lasso.coef_,names,sort=True))

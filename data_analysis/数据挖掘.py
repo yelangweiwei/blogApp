@@ -212,8 +212,5 @@ def persistence_T():
 
 
 
-
-
-
 if __name__=='__main__':
     original_data()
