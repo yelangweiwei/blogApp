@@ -132,7 +132,8 @@ def model_select():
 
 #a helper method for pretty_printing linear models
 def pretty_print_linear(coefs,names=None,sort=False):
-    if all(names)==None:
+    # if all(names)==None:
+    if names==None:
         names = ['X%s'% x for x in range(len(coefs))]
     lst = zip(coefs,names)
     if sort:
@@ -166,7 +167,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.datasets import load_boston
 
 def pretty_print_linear(coefs,names=None,sort=False):
-    if all(names)==None:
+    # if all(names)==None:
+    if names==None:
         names = ['X%s'% x for x in range(len(coefs))]
     lst = zip(coefs,names)
     if sort:
@@ -185,6 +187,94 @@ def lass0_t():
     lasso.fit(x,y)
     print('lasso model',pretty_print_linear(lasso.coef_,names,sort=True))
 
+'''
+l2正则化/ridge regression
+l2正则化将系数向量的l2范数添加到损失函数中，由于l2惩罚系数是二次方的，这使得l2和l1有诸多差异，最明显的就是l2正则化会让系数的取值变得平均。对于关联特征，这意味着他们能够获得更相近的对应系数。还是以y= x1+x2,假设x1和x2具有很强的关联，如果用l1正则化，不论学到的模型是y = x1+x2还是y = 2*x1,惩罚都是一样的，都是2alpha,但是对于l2来说，第一个模型的惩罚项是2alpha,第二个模型的是4*alpha.可以看出，系数之和为常数是，各系数相等时惩罚项是最小的。所以才有了l2会让哥哥系数趋于相同的特点。
+  l2正则化对于特征选择来说是一种稳定的模型，不想l1正则化那样，系数会因为细微的数据变化而变动。所以l2正则化和l1正则化提供的价值是不同的。l2对于特征理解来说更加有用：表示能力强的特征对应的系数是非零。
+当做出结果的时候，会发现ridge的系数更加的稳定，更能反映内部的关系结构。
+'''
+def pretty_print_linear(coefs,names=None,sort=False):
+    if names==None:
+        names = ['X%s'% x for x in range(len(coefs))]
+    lst = zip(coefs,names)
+    if sort:
+        lst = sorted(lst,key=lambda x:-np.abs(x[0]))
+    return '+'.join('%s * %s'%(round(coef,3),name) for coef,name in lst)
+
+
+from sklearn.linear_model import Ridge,LinearRegression
+from sklearn.metrics import r2_score
+def ridge_t():
+    size = 100
+    for i in range(10):
+        print('Random seed is %s'%i)
+        np.random.seed(i)
+        x_seed = np.random.normal(0,1,size)
+        x1 = x_seed+np.random.normal(0,.1,size)
+        x2 = x_seed+np.random.normal(0,0.1,size)
+        x3 = x_seed+np.random.normal(0,.1,size)
+        x = np.array([x1,x2,x3]).T
+        y = x1+x2+x3+np.random.normal(0,0.1,size)
+
+        lr =  LinearRegression()
+        lr.fit(x,y)
+        print('line model:',pretty_print_linear(lr.coef_))
+
+        ridge = Ridge(alpha=10)
+        ridge.fit(x,y)
+        print('ridge model:',pretty_print_linear(ridge.coef_))
+
+
+
+'''
+随机森林：
+    1）有点：随机森林准确率高，鲁棒性好,易于使用等，是目前最流行的机器学习算法之一。
+    2）提供的两种特征选择方法：平均不纯度减少和平均精度减少
+    
+'''
+
+'''
+平均不纯度减少：
+    1）随机森林由多个决策树构成。决策树树中的每一个节点都是关于某个特征的条件，
+    为的是将数据集按照不同的响应变量一分为二。利用不纯度可以确定节点（最优条件），
+    对于分类分类问题，通常采用基尼不纯度或者信息增益，对于回归问题，通常采用的是
+    方差或者最小二乘拟合。当训练决策树的时候，可以计算出每个特征减少了多少树的不
+    纯度。对于一个决策树森林来说，可以算出每个特征平均减少了多少不纯度，并把它平
+    均减少的不纯度作为特征选择的值。
+    2）信息熵：一个随机的变量X可以代表n个随机事件，对应的随机变量为X= xi,那么熵
+    的定义就是X的加权信息量。
+    H(x) =p(x1)log2(1/p(x1))+...+p(xn)log2(1/p(xn))
+    其中p(x1)就是xi发生的概率。
+    例如：有32个球队，每个队的概率实力相当，那么每一队胜出的概率就是1/32,那么要
+    猜对哪个队胜出的概率就比较困难。
+    这个时候H(x) = 32 *(1/32)log2(1/(1/32)) = 5
+    熵可以作为一个系统的混乱程度的标准。
+
+    3）基尼不纯度：
+        基尼不纯度的大概意思是：一个随机事件变成它对立事件的概率。
+        例如：一个随机事件x,p(x=0) =0.5, p(x=1) = 0.5;那么基尼不纯度就是
+        p(x=0)*(1-p(x))+p(x=1)*(1-p(x=1)) = 0.5
+        
+        一个随机事件Y，p(y=0) = 0.1,p(y=1) = 0.9
+        那么基尼不纯度就为：p(y=0)*(1-p(y=0))+p(y=1)*(1-p(y=1))=0.1*0.9+0.9*0.1 = 0.18
+        y=0时发生的概率就比较大，而基尼不纯度就比较小。
+        基尼不纯度越低，纯度越高。可以用来衡量系统混乱程度的标准。
+'''
+from sklearn.datasets import load_boston
+from sklearn.ensemble import RandomForestRegressor
+import numpy as np
+def random_t():
+    #Load boston housing dataset as an example
+    boston = load_boston()
+    X = boston["data"]
+    Y = boston["target"]
+    names = boston["feature_names"]
+    rf = RandomForestRegressor()
+    rf.fit(X, Y)
+    print("Features sorted by their score:")
+    print(sorted(zip(map(lambda x: round(x, 4), rf.feature_importances_), names),
+                 reverse=True))
+
 
 
 
@@ -194,4 +284,6 @@ if __name__=='__main__':
     # mic_t()
     # dis_euc()
     # model_based_ranking()
-    lass0_t()
+    # lass0_t()
+    # ridge_t()
+    random_t()
