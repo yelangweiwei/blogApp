@@ -272,8 +272,122 @@ def random_t():
     rf = RandomForestRegressor()
     rf.fit(X, Y)
     print("Features sorted by their score:")
-    print(sorted(zip(map(lambda x: round(x, 4), rf.feature_importances_), names),
-                 reverse=True))
+    print(sorted(zip(map(lambda x: round(x, 4), rf.feature_importances_), names),reverse=True))
+
+'''
+ 运行结果后；
+    1）这里特征得分实际上采用的是Gini Importance.使用基于不纯度的方法的时候，
+        注意：（1）这种方法存在偏向，对具有更多类型的变量会更有利；
+        （2）对于存在关联的多个特征，其中任意一个都可以作为指示器（优秀的特征），
+        并且一旦某个特征被选择之后，其他的特征的重要度就会急剧下降，因为不纯度已
+        经被选中的那个特征降下来了，其他的特征就很难在降低那么多的不纯度了，这样，
+        只有先被选中的那个特征的重要程度很高，其他的关联特征的重要度往往较低。在
+        理解数据时，就会造成误解，导致错误的认为先被选中的特征是很重要的，而其余
+        的特征是不重要的，但实际上这些特征对响应变量的作用确实非常接近。
+    2)特征随机选择方法稍微缓解了这个问题，但总的来说并没有完全解决。
+'''
+def featureSelection():
+    size = 100000
+    np.random.seed(seed=10)
+    x_seed = np.random.normal(0,1,size)
+    x0 = x_seed+np.random.normal(0,0.1,size)
+    x1 = x_seed+np.random.normal(0,0.1,size)
+    x2 = x_seed+np.random.normal(0,0.1,size)
+    x = np.array([x0,x1,x2]).T
+    y = x0+x1+x2
+    #关注这里特征随机选择max_features
+    rf = RandomForestRegressor(n_estimators=20,max_features=2)
+    rf.fit(x,y)
+    result= map(lambda z:round(z,3),list(rf.feature_importances_))
+    print('scores for x0,x1,x2:',list(result))
+
+'''
+从结果中显示：x1的重要度比x2高，但是，实际他们的重要程度是一样的。
+'''
+
+'''
+平均精度减少
+    1）直接度量每个特征对模型精确率的影响，主要思路是：打乱每个特征的特征值顺序，并且度量顺序变动对模型的精确率
+    的影响。很明显，对于不重要的变量来说，打乱顺序对模型的精确率影响不会太大，但是对于重要的变量来说，打乱顺序就
+    会降低模型的精确率。
+'''
+from sklearn.model_selection import ShuffleSplit
+from sklearn.metrics import r2_score
+from collections import defaultdict
+def mean_decrease_accruacy():
+    boston = load_boston()
+    x = boston['data']
+    y = boston['target']
+    names = boston['feature_names']
+    rf = RandomForestRegressor()
+    scores = defaultdict(list)
+    #混排数据，其中测试数据占30%
+    for train_idx,test_idx in ShuffleSplit(len(x),0.3).split(x):
+        x_train,x_test  = x[train_idx],x[test_idx]
+        y_train,y_test = y[train_idx],y[test_idx]
+        r = rf.fit(x_train,y_train)
+        acc = r2_score(y_test,rf.predict(x_test))
+        #打乱，然后每个特征，就是每一列的数据进行混排，看对总体的影响
+        for i in range(x.shape[1]):
+            x_t = x_test.copy()
+            np.random.shuffle(x_t[:,i])
+            shuff_acc = r2_score(y_test,rf.predict(x_t))
+            scores[names[i]].append((acc-shuff_acc)/acc)
+    print('features sorted by their scores:')
+    print(sorted([(round(np.mean(score),4),feat) for feat,score in scores.items()],reverse=True))
+'''
+在这个例子中，通过运行发现，有的特征对模型的性能影响很大。尽管这些是在所有特征上进行了训练得到的模型，
+然后才得到了每个特征的重要性测试，这并不意味着我们扔掉某些或者某个特征后模型的性能一定会下降很多，因
+为删掉某个特征后，其关联的特征一样可以发挥作用，让模型能基本上不变。
+'''
+
+
+'''
+两种顶层特征选择算法：
+    1）之所以叫做顶层，是因为都是建立在基于模型的特征选择基础之上的，在不同的字迹上建立模型，然后汇总最终确定特征得分。
+    2）稳定性选择：
+        （1）稳定性选择是一种基于二次抽样和选择算法相结合的较新的方法，选择算法可以使回归，SVM或者其他类似的方法。
+        它的主要思想是在不同的数据子集和特征子集上运行特征选择算法，不断的重复，最终汇总特征选择结果。比如可以统计
+        某个特征被认为是重要特征的频率（被选为重要特征的次数除以它所在的子集被测试的次数）。理想情况下，重要的特征
+        的得分会接近100%，稍微弱一点的特征得分会是非0的数，而最无用的特征得分将会接近于0.
+'''
+from sklearn.linear_model import RandomizedLasso
+from sklearn.datasets import load_boston
+def stability_selection_t():
+    boston = load_boston()
+    x = boston['data']
+    y = boston['target']
+    names = boston['feature_names']
+    #alpha=0是岭回归，=1是索回归
+    # 当alpha从0变化到1，目标函数的稀疏解（部分变量的系数为0）也从0单调增加到lasso的稀疏解。
+    rlasso = RandomizedLasso(alpha=0.025)
+    rlasso.fit(x,y)
+    print(sorted(zip(map(lambda x:round(x,4),rlasso.scores_),names),reverse=True))
+'''
+运行结果：值越大，越重要，得分会受到正则化参数alpha的影响，但是sklearnde 
+随机lasso能够自动选择最优的alpha.接下来几个特征得分就开始下降。但是下降的不是特别急，这和纯lasso的方法和随机森立的结果不一样。能够看出稳定性选择对于克服过拟合和对数据理解来说是有帮助的；总的来说，好的特征不会因为有相似的特征，关联特征而得分为0.
+'''
+
+
+'''
+递归特征消除（Recirsive feature elimination  =>RFE）
+ 1）主要思想是反复的构建模型，然后选出最好的或者是最差的特征（根据系数来选择），把选出来的特征放在一起，然后在剩余的特征上重复这个过程，直到所有的特征都遍历了。这个过程中特征别消除的次序就是特征的排序。因此，这是一种寻找最优特征子集的贪心算法。
+ 2）RFE的稳定性很大程度上取决于在迭代的时候底层使用哪种模型。例如，假如RFE
+ 采用普通的回归，没有经过正则化的回归是不稳定的，那么RFE就是不稳定的；加入采用Ridge,而用Ridge正则化的回归是稳定的,那么RFE就是稳定的。
+'''
+from sklearn.feature_selection import RFE
+from sklearn.linear_model import LinearRegression
+from sklearn.datasets import load_boston
+def ref_t():
+    boston = load_boston()
+    x = boston['data']
+    y = boston['target']
+    names = boston['feature_names']
+
+    lr = LinearRegression()
+    rfe  = RFE(lr,n_features_to_select=1)
+    rfe.fit(x,y)
+    print(sorted(zip(map(lambda x:round(x,4),rfe.ranking_),names)))
 
 
 
@@ -286,4 +400,8 @@ if __name__=='__main__':
     # model_based_ranking()
     # lass0_t()
     # ridge_t()
-    random_t()
+    # random_t()
+    # featureSelection()
+    # mean_decrease_accruacy()
+    # stability_selection_t()
+    ref_t()
