@@ -85,8 +85,7 @@ from sklearn.metrics import accuracy_score
 #     print(metrics.accuracy_score(test_labels,predicted_labels))
 
 def load_stop_word(stop_path):
-    with open(stop_path,'r') as rh:
-        stop_words = [line.strip() for line in  io.open(stop_path).readlines()]
+    stop_words = [line.strip() for line in  io.open(stop_path,mode='r',encoding='utf-8').readlines()]
     return stop_words
 
 def load_data(base_path):
@@ -97,29 +96,29 @@ def load_data(base_path):
     documnets = []
     labels = []
     for root,dirs,files in os.walk(base_path):
-        labels.extend(dirs)
+
         for dir in dirs:
-            dir_path = root+'\\'+dir+'\\'
+            dir_path = root+'/'+dir+'/'
             files = os.listdir(dir_path)
             for file in files:
+                labels.append(dir)
                 file_path = dir_path+file
                 with open(file_path,'rb') as rh:
                     content = rh.read()
                     wordlist = list(jieba.cut(content))
-                    words = [wl for wl in wordlist]
-                    documnets.append(' '.join(words))
+                    documnets.append(' '.join(wordlist))
     return documnets,labels
 
 def bayes_T():
     #加载停用的词
-    stop_path = r'G:\20190426\zhouweiwei\mygit\blogApp\data_analysis\data\bayes\text_classification-master\text classification\stop\stopword.txt'
+    stop_path = r'F:\blog\blogApp\data_analysis\data\text_classification-master\text classification\stop\stopword.txt'
     stop_word_list = load_stop_word(stop_path)
 
     #分词
-    train_base_path = r'G:\20190426\zhouweiwei\mygit\blogApp\data_analysis\data\bayes\text_classification-master\text classification\train'
+    train_base_path = r'F:\blog\blogApp\data_analysis\data\text_classification-master\text classification\train'
     train_data,train_labels = load_data(train_base_path)
 
-    test_base_path = r'G:\20190426\zhouweiwei\mygit\blogApp\data_analysis\data\bayes\text_classification-master\text classification\test'
+    test_base_path = r'F:\blog\blogApp\data_analysis\data\text_classification-master\text classification\test'
     test_data,test_labels = load_data(test_base_path)
 
     #计算矩阵
