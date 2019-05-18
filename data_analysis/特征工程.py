@@ -375,7 +375,7 @@ if __name__=='__main__':
     # chi2T()
     # mine_t()
     # rfe_t()
-    lda_t()
+    pca_t()
 
 
 
