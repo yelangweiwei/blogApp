@@ -1,0 +1,14 @@
+cblas_sgemm
+cblas_sgemm_alloc
+cblas_sgemm_compute
+cblas_sgemm_free
+cblas_sgemm_pack
+cblas_sgemm_pack_get_size
+cblas_gemm_s8u8s32
+cblas_saxpy
+cblas_sscal
+cblas_sasum
+cblas_scopy
+cblas_sgemv
+cblas_isamax
+vsExp

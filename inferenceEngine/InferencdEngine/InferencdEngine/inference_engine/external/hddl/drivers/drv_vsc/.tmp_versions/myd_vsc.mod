@@ -1,0 +1,2 @@
+/opt/intel/openvino_2019.1.144/deployment_tools/inference_engine/external/hddl/drivers/drv_vsc/myd_vsc.ko
+/opt/intel/openvino_2019.1.144/deployment_tools/inference_engine/external/hddl/drivers/drv_vsc/myd_vsc.o
