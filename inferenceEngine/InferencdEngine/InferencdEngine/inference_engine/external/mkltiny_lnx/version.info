@@ -1,0 +1,12 @@
+
+The special version of MKL dynamic library packed specially
+to use within Inference Engine library.
+
+MKL information
+    mkl version              20190003
+    mkl_build_data           20190125
+    parallel_studio_version  
+
+Data of packing: 20190131
+
+
