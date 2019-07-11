@@ -8,9 +8,11 @@ import matplotlib.pyplot as plt
 import jieba
 import numpy as np
 import urllib
+import json
 import requests
 from wordcloud import WordCloud
 from PIL import Image
+from lxml import etree
 
 f = '数据分析全景图及修炼指南' \
         '学习数据挖掘的最佳学习路径是什么？' \
@@ -56,7 +58,8 @@ def create_word_cloud(f):
 headers = {
     'Referer':'https://music.163.com',
     'Host':'music.163.com',
-    'Accept':'txt'
+    'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
+    'User-Agent':'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'
 }
 
 #爬取毛不易的歌
@@ -64,6 +67,41 @@ def get_names_and_ids(artist_id):
     #获取指定音乐人的页面内容
     url = 'https://music.163.com/#/artist?id='+str(artist_id)
     page_content = requests.request('GET',url,headers = headers)
+    #将获得的内容，使用HTML进行解析
+    html = etree.HTML(page_content)
+    #使用xpath解析前50手歌,使用xpath解析元素和属性
+    #打印指定路径下a标签的属性
+    href_xpath = "//*[@id='hotsong-list']/a/@href"
+    #获取a标签的内容
+    title_xpath = "//*[@id='hotsong-list']/a/text()"
+    href_list = html.xpath(href_xpath)
+    title_list = html.xpath(title_xpath)
+    print(list(href_list))
+    print(list(href_list))
+    id_list = []
+    name_list = []
+    for href,name in zip(href_list,title_list):
+        id_list.append(href[9:])
+        name_list.append(name)
+    return name_list,id_list
+
+#根据歌的名字和id读取每一首歌
+def get_song_lyric(name,id):
+    song_href =
+    res = requests.request('GET',song_href,headers=headers)
+    content = json.loads(res)
+    print(content)
+
+
+
+def maoYiCloud(artist_id):
+    name_list, id_list = get_names_and_ids(artist_id)
+    for name,id in zip(name_list,id_list):
+        get_song_lyric()
+
+
+
+
 
 
 if __name__=='__main__':
@@ -73,7 +111,7 @@ if __name__=='__main__':
 
     #毛不易的歌词制作词云
     artist_id = '12138269'
-
+    maoYiCloud(artist_id)
 
 
 
