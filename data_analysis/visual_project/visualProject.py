@@ -56,24 +56,24 @@ def create_word_cloud(f):
     plt.show()
 
 headers = {
-    'Referer':'https://music.163.com',
-    'Host':'music.163.com',
-    'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
-    'User-Agent':'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'
+    'referer':'https://music.163.com',
+    'host':'music.163.com',
+    'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
+    'user-agent':'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'
 }
 
 #爬取毛不易的歌
 def get_names_and_ids(artist_id):
     #获取指定音乐人的页面内容
-    url = 'https://music.163.com/#/artist?id='+str(artist_id)
-    page_content = requests.request('GET',url,headers = headers)
+    url = 'https://music.163.com/artist?id='+str(artist_id)
+    page_content = requests.request('GET',url,headers=headers)
     #将获得的内容，使用HTML进行解析
-    html = etree.HTML(page_content)
+    html = etree.HTML(page_content.text)
     #使用xpath解析前50手歌,使用xpath解析元素和属性
     #打印指定路径下a标签的属性
-    href_xpath = "//*[@id='hotsong-list']/a/@href"
+    href_xpath = "//*[@id='hotsong-list']//a/@href"
     #获取a标签的内容
-    title_xpath = "//*[@id='hotsong-list']/a/text()"
+    title_xpath = "//*[@id='hotsong-list']//a/text()"
     href_list = html.xpath(href_xpath)
     title_list = html.xpath(title_xpath)
     print(list(href_list))
@@ -87,7 +87,8 @@ def get_names_and_ids(artist_id):
 
 #根据歌的名字和id读取每一首歌
 def get_song_lyric(name,id):
-    song_href =
+    #歌词API
+    song_href = 'https://music.163.com/#/song?id='+id
     res = requests.request('GET',song_href,headers=headers)
     content = json.loads(res)
     print(content)
@@ -97,7 +98,7 @@ def get_song_lyric(name,id):
 def maoYiCloud(artist_id):
     name_list, id_list = get_names_and_ids(artist_id)
     for name,id in zip(name_list,id_list):
-        get_song_lyric()
+        get_song_lyric(name,id)
 
 
 
