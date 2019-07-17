@@ -88,7 +88,7 @@ def get_names_and_ids(artist_id):
 #根据歌的名字和id读取每一首歌
 def get_song_lyric(name,id):
     #歌词API
-    song_href = 'https://music.163.com/#/song?id='+id
+    song_href = 'https://music.163.com/song?id='+id
     res = requests.request('GET',song_href,headers=headers)
     content = json.loads(res)
     print(content)
