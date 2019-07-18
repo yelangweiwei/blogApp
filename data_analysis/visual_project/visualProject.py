@@ -85,13 +85,28 @@ def get_names_and_ids(artist_id):
         name_list.append(name)
     return name_list,id_list
 
-#根据歌的名字和id读取每一首歌
-def get_song_lyric(name,id):
+#下面这种方式是通过post参数来获取指定某个页面的值，这个不是通过api来获取数据。
+
+data = {
+    'params':'Ly/Yxc+s2j4+Efxn2QJqK0PE4izwh9Ih5aJhzxk+UYfCv7mCa3s11vUsK5ZyctHR+uXPR1lq7kS7vzmgS09A7i4Rb+HzObaYFxlJ1BaGWXCgb90ENn648EZJiGAn8nMS',
+    'encSecKey':'09afaa2f724dce8e007ab6a9a3be7dd814b6c0e55b43114d4f06eb6b28da9fd71df6e867bae0b5b9480a229dd787317d64ccaf33a4d54f46dbf9321c83601dd5cbd18641abedc62a99a7d016ca37007b2c8e7b8ecf5a96c206806c4bc7feaabf896b70d6bba8bc74b50feee95bea4fe59f918b22f74ecd164ba83a1c5d6e5d36'
+}
+
+song_headers = {
+    'user-agent':'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'
+}
+
+def get_song_lyric():
     #歌词API
-    song_href = 'https://music.163.com/song?id='+id
-    res = requests.request('GET',song_href,headers=headers)
-    content = json.loads(res)
-    print(content)
+    song_href = 'https://music.163.com/weapi/song/lyric'
+    res = requests.post(url = song_href,data=data,headers=song_headers)
+    content = json.loads(res.content.decode('utf-8'))
+    song_words = content['lrc']['lyric']
+    print(song_words)
+
+def get_song_lyric_by_song_id(name,id):
+    pass
+
 
 
 
@@ -106,6 +121,7 @@ def maoYiCloud(artist_id):
 
 
 if __name__=='__main__':
+    get_song_lyric()
 
     #连续使用wordcloud
     # create_word_cloud(f)
