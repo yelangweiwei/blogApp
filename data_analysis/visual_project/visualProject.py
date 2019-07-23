@@ -76,8 +76,6 @@ def get_names_and_ids(artist_id):
     title_xpath = "//*[@id='hotsong-list']//a/text()"
     href_list = html.xpath(href_xpath)
     title_list = html.xpath(title_xpath)
-    print(list(href_list))
-    print(list(href_list))
     id_list = []
     name_list = []
     for href,name in zip(href_list,title_list):
@@ -104,24 +102,77 @@ def get_song_lyric():
     song_words = content['lrc']['lyric']
     print(song_words)
 
-def get_song_lyric_by_song_id(name,id):
-    pass
+def remove_stop_words_list(words):
+    stop_words = ['作曲','作词','编曲','arranger','制作人','制作','口琴','键盘','吉他','贝斯','Bass','Producer','Harmonica',
+                  'Guitar','鼓','Drum','弦乐','Strings','国际首席爱乐乐团','混音','Mixing','母带','Mastering','录音棚',
+                  'Studio','录音','人声','编辑','助理','发行','\n','总监','Vocal','刘卓','赵兆','李杨','李荣浩','谭伊哲',
+                  '邢铜','李健','马伯骞','宋涛','郭舒文','李游','韩阳','武勇恒','薛峰','乐队','薛峰','Joe LaPorta','乐队',
+                  '不易','distributed','薛之谦']
+    for word in stop_words:
+        if word in words:
+            words = words.replace(word,'')
+        else:
+            continue
+    return words
 
+import re
+def get_song_lyric_by_song_id(name,song_url):
+    res = requests.request('GET',song_url,headers=headers)
+    # print(res.json())
+    if 'lrc' in res.json():
+        words = res.json()['lrc']['lyric']
+        #使用正则表达式去掉时间
+        words = re.sub(r'[\d:.[\]]','',words)
+        #去掉停用的词
+        # print(words)
+        return words
+    else:
+        return None
 
+def create_word_cloud_by_song(all_words):
+    all_words = remove_stop_words_list(all_words)
+
+    #将输入的词进行截取
+    '''
+    jieba:
+        精确模式：试图将句子精确的区分开，适合文本分析
+        全模式：将句子中所有的可以成词的词语都扫描出来，速度快，但是不能解决歧义
+        搜索引擎模式:在精确模式的基础上，对长词在区分，提高召唤率，适合用于搜索引擎分词。
+    '''
+    text = ' '.join(jieba.cut(all_words,cut_all=False,HMM=True))
+    #创建词云
+    wc = WordCloud(
+        # 这个font_path要小写
+        font_path='simhei.ttf',
+        max_words=100,
+        width=2000,
+        height=1200,
+    )
+
+    #生成词云
+    word_cloud = wc.generate(text)
+    #写词云
+    word_cloud.to_file('maobuyi.jpg')
+    #显示词云
+    plt.imshow(word_cloud)
+    plt.axis('off')
+    plt.show()
 
 
 def maoYiCloud(artist_id):
     name_list, id_list = get_names_and_ids(artist_id)
+    all_lyric = ''
     for name,id in zip(name_list,id_list):
-        get_song_lyric(name,id)
-
-
-
-
+        song_url  = 'http://music.163.com/api/song/lyric?os=pc&id='+id+'&lv=-1&kv=-1&tc=-1'
+        lyric = get_song_lyric_by_song_id(name,song_url)
+        all_lyric = all_lyric+' '+lyric
+    #创建词云
+    create_word_cloud_by_song(all_lyric)
 
 
 if __name__=='__main__':
-    get_song_lyric()
+    #获得网页内容，获得歌词内容
+    # get_song_lyric()
 
     #连续使用wordcloud
     # create_word_cloud(f)
