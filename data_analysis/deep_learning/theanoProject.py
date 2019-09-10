@@ -201,9 +201,53 @@ def pca_t():
     print(np.dot(X,k_eigenvectors.T))
 
 
+#二项式分布
+import matplotlib.pyplot as plt
+import math
+from scipy import stats
 
+def binomial_t():
+    n = 20
+    p = 0.3
+    k = np.arange(0,41)
+    #定义二项分布
+    binominal = stats.binom.pmf(k,n,p)
 
+    #二项分布可视化
+    plt.plot(k,binominal,'o-')
+    plt.title('binomial:n=%i,p =%.2f'%(n,p),fontsize=15)
+    plt.xlabel('number of success')
+    plt.ylabel('probality of success',fontsize=15)
+    plt.grid(True)
+    plt.show()
 
+'''
+离散型随机变量的分布情况，如果是连续型的随机变量的情况，通过使用概率密度函数来描述。
+常用的连续型随机变量的概率密度函数：正态分布或者高斯分布，又叫钟型曲线。
+从图上展示：标准差越大，图形越分散
+'''
+def norm_t():
+    #平局值或者期望
+    mu = 0
+    #标准差
+    sigma1 = 1
+    sigma2 = 2
+    #随机变量的取值
+    x = np.arange(-6,6,0.1)
+    y1 = stats.norm.pdf(x,0,1)  #定义正态分布的密度函数
+    y2 = stats.norm.pdf(x,0,2)
+    plt.plot(x,y1,label='sigma is 1')
+    plt.plot(x,y2,label='sigma is 2')
+    plt.title('normal $\mu$=%.1f,$\sigma$=%.1f or %.1f'%(mu,sigma1,sigma2))
+    plt.xlabel('x')
+    plt.ylabel('probability density')
+    plt.legend(loc='upper left')
+    plt.show()
+
+'''
+边缘概率
+联合概率分布，求其中一个随机变量的概率分布的情况,定义在子集上的概率分布称为边缘概率分布
+'''
 
 
 
@@ -211,8 +255,9 @@ def pca_t():
 
 
 if __name__ == '__main__':
-    pca_t()
 
+    norm_t()
+    # binomial_t()
     # trace_t()
     # svd_t()
     # norm_fanshu_t()

@@ -5,6 +5,7 @@ import time
 
 
 if __name__=='__main__':
+    pass
 
     #循环和向量化运算比较  SIMD指令
     # x1 = np.random.rand(1000000)
