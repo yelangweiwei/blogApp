@@ -282,8 +282,28 @@ I(x,y)= H(y)-H(x)  在决策树的特征选择中，信息增益为主要依据�
 相对熵：
 交叉熵；
 '''
-
-
+'''
+使用交叉熵，及其注意事项
+'''
+import tensorflow as tf
+def cross_entropy():
+    #神经网路的输出
+    logits = tf.constant([[1.0,2.0,3.0],[1.0,2.0,3.0],[1.0,2.0,3.0]])
+    #使用softmax的输出
+    y = tf.nn.softmax(logits)
+    #正确的标签只要一个1
+    y_ = tf.constant([[0.0,0.0,1.0],[1.0,0.0,0.0],[1.0,0.0,0.0]])
+    #计算交叉熵
+    cross_entropy = -tf.reduce_sum(y_*tf.log(tf.clip_by_value(y,1e-10,1.0)))
+    #直接计算神经网络的输出结果的交叉熵
+    cross_entropy2 = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(labels=y_,logits=logits))
+    with tf.Session() as sess:
+        softmax = sess.run(y)
+        ce = sess.run(cross_entropy)
+        ce2 = sess.run(cross_entropy2)
+        print('softmax result=',softmax)
+        print('cross_entropy result=',ce)
+        print('softmax_cross_entropy_with_logits result=',ce2)
 
 
 
@@ -291,7 +311,7 @@ I(x,y)= H(y)-H(x)  在决策树的特征选择中，信息增益为主要依据�
 
 if __name__ == '__main__':
 
-    hxP()
+    cross_entropy()
     # binomial_t()
     # trace_t()
     # svd_t()
