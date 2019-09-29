@@ -305,7 +305,10 @@ def cross_entropy():
         print('cross_entropy result=',ce)
         print('softmax_cross_entropy_with_logits result=',ce2)
 
+'''
+图像处理：
 
+'''
 
 
 
