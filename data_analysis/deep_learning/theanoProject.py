@@ -312,9 +312,87 @@ def cross_entropy():
 
 
 
+'''
+tensorflow自编码器
+'''
+import os
+import struct
+import numpy as py
+import matplotlib.pyplot as plt
+from tensorflow.python.keras.layers import Input,Dense
+from tensorflow.python.keras.models import Model
+from tensorflow.examples.tutorials.mnist import input_data
+
+#为避免网络问题，这里我们定义处理本地数据集MINIST 的加载函数
+def load_minist(path,kind='train'):
+    '''Load MNIST data from path'''
+    labels_path = os.path.join(path,'%s-labels-idx1-ubyte'%kind)
+    images_path = os.path.join(path,'%s-images-idx3-ubyte'%kind)
+    with open(labels_path,'rb') as lbpath:
+        magic,n = struct.unpack('>II',lbpath.read(8))   #将读取的字节序列转换为大端格式的无符号整型，将每2个字节转换为无符类型的整型
+        labels = np.fromfile(lbpath,dtype=np.uint8)   #更高效的读取文件内容的方式，需要知道数据的类型
+    with open(images_path,'rb') as images_path:
+        magic,num,rows,cols = struct.unpack('>IIII',images_path.read(16))
+        images = np.fromfile(images_path,dtype=np.uint8).reshape(len(labels),784)
+    return images,labels
+
+def zibianma_code():
+    #读取训练的数据和测试的数据
+    dir_path = 'G:\\20190426\\zhouweiwei\\mygit\\blogApp\\data_analysis\\data\\mnist_data\\'
+    x_train,y_train = load_minist(dir_path,kind='train')
+    x_test,y_test = load_minist(dir_path,kind='t10k')
+    x_train = x_train.reshape(-1,28,28,1).astype('float32')
+    x_test = x_test.reshape(-1,28,28,1).astype('float32')
+    #归一化数据，使之在[0,1]之间
+    x_train = x_train.astype('float32')/255
+    x_test = x_test.astype('float32')/255
+    #对x_train展开为-1*784
+    x_train = x_train.reshape(len(x_train),np.prod(x_train.shape[1:]))
+    x_test = x_test.reshape(len(x_test),np.prod(x_test.shape[1:]))
+    #定义输入层节点，隐含层节点数
+    input_img = Input(shape=(784,))
+    encoding_dim = 32
+    #利用keras函数模型
+    encoded = Dense(encoding_dim,activation='relu')(input_img)
+    decoded = Dense(784,activation='sigmoid')(encoded)
+    #创建自编码模型
+    autoencoder = Model(inputs=input_img,outputs=decoded)
+    encoder = Model(inputs=input_img,outputs=encoded)
+    encoded_input = Input(shape=(encoding_dim,))
+    decoder_layer = autoencoder.layers[-1]
+    #创建解码器模型
+    decoder = Model(inputs=encoded_input,outputs=decoder_layer(encoded_input))
+    #编译自编码器模型
+    autoencoder.compile(optimizer='adam',loss='binary_crossentropy')
+    #训练该模型
+    autoencoder.fit(x_train,y_train,epochs=50,batch_size=256,shuffle=True,validation_data=(x_test,y_test))
+    #输出预测值
+    encoded_imgs = encoder.predict(x_test)
+    decoded_imgs = decoder.predict(encoded_imgs)
+    #显示10个数字
+    n = 10
+    plt.figure(figsize=(20,4))
+    for i in range(n):
+        #可视化输入数据
+        ax = plt.subplot(2,n,i+1)
+        plt.imshow(x_test[i].reshape(28,28))
+        plt.gray()
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        #可视化自编码器学习的结果
+        ax = plt.subplot(2,n,i+1+n)
+        plt.imshow(decoded_imgs[i].reshape(28,28))
+        plt.gray()
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+    plt.show()
+
+
+
+
 if __name__ == '__main__':
 
-    cross_entropy()
+    zibianma_code()
     # binomial_t()
     # trace_t()
     # svd_t()
