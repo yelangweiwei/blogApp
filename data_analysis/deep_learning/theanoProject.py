@@ -326,14 +326,14 @@ from tensorflow.examples.tutorials.mnist import input_data
 #为避免网络问题，这里我们定义处理本地数据集MINIST 的加载函数
 def load_minist(path,kind='train'):
     '''Load MNIST data from path'''
-    labels_path = os.path.join(path,'%s-labels-idx1-ubyte'%kind)
-    images_path = os.path.join(path,'%s-images-idx3-ubyte'%kind)
+    labels_path = os.path.join(path,'%s-labels.idx1-ubyte'%kind)
+    images_path = os.path.join(path,'%s-images.idx3-ubyte'%kind)
     with open(labels_path,'rb') as lbpath:
         magic,n = struct.unpack('>II',lbpath.read(8))   #将读取的字节序列转换为大端格式的无符号整型，将每2个字节转换为无符类型的整型
         labels = np.fromfile(lbpath,dtype=np.uint8)   #更高效的读取文件内容的方式，需要知道数据的类型
     with open(images_path,'rb') as images_path:
-        magic,num,rows,cols = struct.unpack('>IIII',images_path.read(16))
-        images = np.fromfile(images_path,dtype=np.uint8).reshape(len(labels),784)
+        magic,num,rows,cols = struct.unpack('>IIII',images_path.read(16))   #二进制数据转换为无符号int类型
+        images = np.fromfile(images_path,dtype=np.uint8).reshape(len(labels),784)   #将4维数据转换为2维数据
     return images,labels
 
 def zibianma_code():
@@ -341,12 +341,12 @@ def zibianma_code():
     dir_path = 'G:\\20190426\\zhouweiwei\\mygit\\blogApp\\data_analysis\\data\\mnist_data\\'
     x_train,y_train = load_minist(dir_path,kind='train')
     x_test,y_test = load_minist(dir_path,kind='t10k')
-    x_train = x_train.reshape(-1,28,28,1).astype('float32')
+    x_train = x_train.reshape(-1,28,28,1).astype('float32')   #将二维的数据转换为三维
     x_test = x_test.reshape(-1,28,28,1).astype('float32')
     #归一化数据，使之在[0,1]之间
     x_train = x_train.astype('float32')/255
     x_test = x_test.astype('float32')/255
-    #对x_train展开为-1*784
+    #对x_train展开为-1*784,前边为了做归一化，将数据转换为4维，这里又将数据转换为二维
     x_train = x_train.reshape(len(x_train),np.prod(x_train.shape[1:]))
     x_test = x_test.reshape(len(x_test),np.prod(x_test.shape[1:]))
     #定义输入层节点，隐含层节点数
