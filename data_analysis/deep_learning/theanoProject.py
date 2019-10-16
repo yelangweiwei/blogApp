@@ -336,12 +336,171 @@ def load_minist(path,kind='train'):
         images = np.fromfile(images_path,dtype=np.uint8).reshape(len(labels),784)   #将4维数据转换为2维数据
     return images,labels
 
+'''
+自编码器的作用：
+    1，数据去噪
+    2，进行可视化降维
+    
+    设置合适的维度和稀疏约束，自编码器可以学习到PCA等技术更有意思的数据投影
+    自编码器能从数据样本中进行无监督学习，这意味着可以将这个算法应用到某个数据集找那个，来取得良好的性能，且不需要任何新的特征工程，只需要适当的训练数据
+    
+    缺点：
+        自编码器在图像压缩方面表现不好，由于在某个给定数据集上训练自编码器，因此它在处理和训练相类似的数据时可达到合理的压缩结果，但是在压缩差异较大的其他图像时效果不佳，这里，像JPEG这样的
+        压缩计数在通用图像压缩方面会表现的更好
+    
+    训练自编码器，可以使输入通过编码器和解码器后，保留尽可能多的信息，但也可以训练自编码器来使新表征具有多种不同的属性，不同类型的自编码器旨在实现不同类型的属性
+    四种不同的自编码器：
+        1：香草自编码器
+        2，多层自编码器
+        3，卷积自编码器
+        4，正则自编码器
+'''
+
+'''
+香草自编码器：
+    1：在这种自编码器中，只有三个网络层，即只有一个隐藏层的神经网络。它的输入和输出是相同的，可通过使用Adam优化器和均方差损失函数，来学习如何重构。
+    隐含层维数是64，小于输入维数784，则称这个编码器是有损的。通过这个约束，来迫使神经网络来学习数据的压缩表征。
+'''
+
+def xiangcao_encode():
+    input_size = 784
+    hidden_size = 64
+    output_size = 784
+
+    x = Input((input_size,))
+    #Encoder
+    h = Dense(hidden_size,activation='relu')(x)
+    #Decoder
+    r = Dense(output_size,activation='sigmoid')(h)
+
+    autoencoder = Model(input=x,output=r)
+    autoencoder.compile(optimizer='adam',loss='mse')
+
+'''
+多层自编码器
+    可以将自动编码器的隐含层数目进一步提高
+    在这里使用了3个隐含层，不只是一个，任意一个隐含层都可以作为特征表征，但是为了使网络对称，我们使用最中间的网络层。
+'''
+def many_layer_encode():
+    input_size = 784
+    hidden_size = 128
+    code_size = 64
+
+    x = Input(shape=(input_size,))
+    #encoder
+    hidden_1 = Dense(hidden_size,activation='relu')(x)
+    h  = Dense(code_size,activation='relu')(hidden_1)
+
+    #Decoder
+    hidden_2 = Dense(hidden_size,activation='relu')(h)
+    r = Dense(input_size,activation='sigmoid')(hidden_2)
+
+    autoencoder = Model(input=x,output=r)
+    autoencoder.compile(optimizer='adam',loss='mse')
+
+'''
+卷积自编码器
+    除了全连接层，自编码器应用到卷积层
+    原理是一样的，要使用3D矢量（如图像）而不是展平后的一维矢量。对输入图像进行下采样，以提供较小维度的潜在表征，来迫使自编码器从压缩后的数据进行学习。
+'''
+from keras.layers import Conv2D,MaxPooling2D,UpSampling2D
+def conv_encode_decode():
+    #输入是3维
+    x = Input(shape=(28,28,1))
+
+    #Encoder
+    conv1_1 = Conv2D(16,(3,3),activation='relu',padding='same')(x)  #卷积中输出滤波器的数量，卷积窗，激活函数，
+    '''
+    池化层两个作用：
+        1：平移，旋转，尺度不变性
+        2：保留主要的特征同时减少参数（降维，效果类似PCA）和计算量，防止过拟合，提高模型泛化能力
+    '''
+    pool1 = MaxPooling2D((2,2),padding='same')(conv1_1)  #卷积池的窗大小，将输入的数据按照卷积窗的大小进行
+    conv1_2 = Conv2D(8,(3,3),activation='relu',padding='same')(pool1)
+    pool2 = MaxPooling2D((2,2),padding='same')(conv1_2)
+    conv1_3 = Conv2D(8,(3,3),activation='relu',padding='same')(pool2)
+    h = MaxPooling2D((2,2),padding='same')(conv1_3)
+
+    #Decoder
+    conv2_1 = Conv2D(8,(3,3),activation='relu',padding='same')(h)
+
+    '''
+     size:整数tuple,分别为行和列的上采样因子
+     作用是：简单的用复制插值对原张量进行修改，也就是平均池化的逆操作。
+    '''
+    up1 = UpSampling2D((2,2))(conv2_1)
+    conv2_2 = Conv2D(8,(3,3),activation='relu',padding='same')(up1)
+    up2 = UpSampling2D((2,2))(conv2_2)
+    conv2_3 = Conv2D(16,(3,3),activation='relu')(up2)
+    up3 = UpSampling2D((2,2))(conv2_3)
+    r = Conv2D(1,(3,3),activation='sigmoid',padding='same')(up3)
+
+    autoencoder = Model(input=x,output=r)
+    autoencoder.compile(optimizer='adam',loss='mse')
+
+'''
+正则自编码器：
+    除了施加一个比输入维度小的隐含层，一些其他方法也可以用来约束自编码器的重构，如正则自编码器
+    正则自编码器不需要使用浅层的编码器和解码器以及小的编码维数来限制模型的容量，而是使用损失函数来鼓励模型学习其他特征（除了将输入复制到输出），
+    这些特性包括系数表征，小导数表征，以及对噪声或输入缺失的鲁棒性。
+    常用到两种正则自编码器：稀疏自编码器和降噪自编码器
+'''
+'''
+稀疏自编码器：
+    一般用来学习特征，以便用于像分类这样的任务，稀疏正则化的自编码器必须反映训练数据的独特统计特征，而不是简单的充当恒等函数。以这种方式训练，执行附带
+     稀疏惩罚的复现任务可以得到能学习有用特征的模型
+     还有一种用来约束自动编码器重构的方法，是对其损失函数施加的约束，比如：对损失函数添加一个正则化约束，这样能使自编码器学习到数据的稀疏表征
+     在隐含层，我们加入了L1正则化，作为优化阶段中损失函数的惩罚项，与香草自编码器相比，这样操作后的数据表征更为稀疏。
+'''
+from keras import regularizers
+def sparse_encode():
+    input_size = 784
+    hidden_size = 64
+    output_size = 784
+
+    x = Input(shape=(input_size,))
+    #Encoder 利用损失函数的惩罚项，学些训练数据集的独特统计特征。
+    h = Dense(hidden_size,activation='relu',activity_regularizer=regularizers.l1(10e-5))(x) #施加在输出上的L1正则
+
+    #Decoder
+    r = Dense(output_size,activation='sigmoid')(h)
+
+    autoencoder = Model(input=x,output=r)
+    autoencoder.compile(optimizer='adam',loss='mse')
+
+
+'''
+降噪自编码器：
+    1，这里不是通过对损失函数施加惩罚项，而是通过改变损失函数的重构误差项来学习一些有用的信息
+    2，向训练数据加入噪声，并使自编码器学会去除这种噪声来获得没有被噪声污染过的真实输入。因此，这就迫使编码器学习提取最重要的特征并学习输入数据中更加鲁棒性
+    的表征。这也是泛化能力比一般编码器强的原因
+'''
+def remove_noise_encode():
+    x = Input(shape=(28,28,1))
+
+    #Encoder
+    conv1_1 = Conv2D(32,(3,3),activation='relu',padding='same')(x)
+    pool1= MaxPooling2D((2,2),padding='same')(conv1_1)
+    conv1_2  = Conv2D(32,(3,3),activation='relu',padding='same')(pool1)
+    h = MaxPooling2D((2,2),padding='same')(conv1_2)
+
+    #Decoder
+    conv2_1 = Conv2D(32,(3,3),activation='relu',padding='same')(h)
+    up1 = UpSampling2D((2,2))(conv2_1)
+    conv2_2 = Conv2D(32,(3,3),activation='relu',padding='same')(up1)
+    up2 = UpSampling2D((2,2))(conv2_2)
+    r = Conv2D(1,(3,3),activation='sigmoid',padding='same')(up2)
+    autoencoder = Model(input=x,output=r)
+    autoencoder.compile(optimizer='adam',loss='mse')
+
+
 def zibianma_code():
     #读取训练的数据和测试的数据
     dir_path = 'G:\\20190426\\zhouweiwei\\mygit\\blogApp\\data_analysis\\data\\mnist_data\\'
     x_train,y_train = load_minist(dir_path,kind='train')
     x_test,y_test = load_minist(dir_path,kind='t10k')
-    x_train = x_train.reshape(-1,28,28,1).astype('float32')   #将二维的数据转换为三维
+    # 将数据转换为浮点类型
+    x_train = x_train.reshape(-1,28,28,1).astype('float32')
     x_test = x_test.reshape(-1,28,28,1).astype('float32')
     #归一化数据，使之在[0,1]之间
     x_train = x_train.astype('float32')/255
@@ -353,10 +512,17 @@ def zibianma_code():
     input_img = Input(shape=(784,))
     encoding_dim = 32
     #利用keras函数模型
+    '''
+    限制维度，使其小于输入的维度，这种情况称为有损自编码器，通过训练有损表征，使得自编码器能学到数据中最重要的特征；
+    如果潜在表征的维度和输入相同，或是在完备案例中潜在表征的维度大于输入，上述结果也会出现。
+    在这些情况下，即使使用线性编码器和线性解码器，也能很好的利用输入重构输出。且无需了解有关数据分布的任何有用信息
+    在理想情况下，根据要分配的数据复杂度，来准确的选择编码器和解码器的编码维数和容量，就可以成功的训练任何所需的自编码器器结构。
+    '''
     encoded = Dense(encoding_dim,activation='relu')(input_img)
     decoded = Dense(784,activation='sigmoid')(encoded)
     #创建自编码模型
     autoencoder = Model(inputs=input_img,outputs=decoded)
+    #创建编码器模型
     encoder = Model(inputs=input_img,outputs=encoded)
     encoded_input = Input(shape=(encoding_dim,))
     decoder_layer = autoencoder.layers[-1]
@@ -365,7 +531,7 @@ def zibianma_code():
     #编译自编码器模型
     autoencoder.compile(optimizer='adam',loss='binary_crossentropy')
     #训练该模型
-    autoencoder.fit(x_train,y_train,epochs=50,batch_size=256,shuffle=True,validation_data=(x_test,y_test))
+    autoencoder.fit(x_train,x_train,epochs=50,batch_size=256,shuffle=True,validation_data=(x_test,x_test))
     #输出预测值
     encoded_imgs = encoder.predict(x_test)
     decoded_imgs = decoder.predict(encoded_imgs)
