@@ -1,3 +1,4 @@
+from __future__ import print_function  #其中引用的是新版本的函数，在低版本调用函数的时候，这里要调用高版本函数的特征
 import theano
 import numpy as np
 from theano import tensor as T
@@ -553,12 +554,86 @@ def zibianma_code():
         ax.get_yaxis().set_visible(False)
     plt.show()
 
+#使用自编码预测信用卡欺诈
+'''
+    使用自动编码，进行异常检测
+    根据模型进行欺诈预测
+    这个自编码器先跳过，看看后边是不是都要使用自编码器 
+'''
+
+
+######################tensorflow实现Word2Vec
+'''
+    典型的词向量表示法有：独热表示，和分布式表示
+    独热表示：独热表示的向量长度为词典的大小，向量的分量只有一个1，其他的全为0,1的位置对应该词在词典中的位置
+    文本分类：使用词袋模型，将文章对应的稀疏矩阵合并为一个向量，然后统计每个词出现的频率；优点：存储简洁，
+        缺点：容易受维数灾难的困扰，尤其是用于深度学习算法时。
+            任何两个词都是孤立的，存在语义鸿沟词（任意两个词之间都是孤立的，不能体现词和词之间的关系）
+            克服这种不足，人们提出分布式表示
+    分布式表示：
+        解决词汇和位置无关的问题，可以通过计算向量之间的距离（欧式距离，余弦距离）来体现词与词的相似性。基本的想法是直接使用一个普通的向量表示一个词。
+        词向量的分布式表示解决了词汇和位置无关的问题。
+    word2vec并非是深度学习的范畴，但是生成的词向量在很多任务中可以作为深度学习算法的输入，是深度学习在NLP领域的基础。
+    
+    Word2Vec原理：
+        1：根据词汇周围来预测生成的概率，根据上下文来预测目标值，使用的模型CBOW 模型 
+        2：根据目标值预测上下文，使用的模型：Skip-Gram模型。
+'''
+
+#导入需要的库
+
+import collections
+import math
+import numpy as np
+import os
+import random
+import tensorflow as tf
+import zipfile
+from matplotlib import pylab
+from six.moves import range
+from urllib.request import urlretrieve
+from sklearn.manifold import TSNE
+
+#读取本地的数据
+def read_data(file_name):
+    '''
+    将包含在zip文件中的第一个文件解压为单词列表
+    :param file_name: 
+    :return: 
+    '''
+    with zipfile.ZipFile(file_name) as f:
+        data = tf.compat.as_str(f.read(f.namelist()[0])).split()  #将读取的内容转换为字符串，并进行拆分
+        print(data)
+    return data
+
+#构建数据集
+vacabulary_size = 50000
+def build_dataset(words):
+    count = ['UNK',-1]
+    '''
+        collections.Counter:
+    '''
+    count.extend(collections.Counter(words).most_common(vacabulary_size-1))
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 if __name__ == '__main__':
 
-    zibianma_code()
+    zip_file = 'C:\\Users\\Administrator\\Desktop\\temp\\krk_data.zip'
+    read_data(zip_file)
+
+    # zibianma_code()
     # binomial_t()
     # trace_t()
     # svd_t()
