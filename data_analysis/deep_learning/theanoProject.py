@@ -606,14 +606,7 @@ def read_data(file_name):
         print(data)
     return data
 
-#构建数据集
-vacabulary_size = 50000
-def build_dataset(words):
-    count = ['UNK',-1]
-    '''
-        collections.Counter:
-    '''
-    count.extend(collections.Counter(words).most_common(vacabulary_size-1))
+
 
 
 
@@ -696,7 +689,7 @@ if __name__ == '__main__':
     #类型转换，共享变量
     # data= np.array([[1,2],[3,4]])
     # shared_type = theano.shared(data)
-    # print(type(shared_type))
+    # print(type(shared_type))吧
 
 
 
