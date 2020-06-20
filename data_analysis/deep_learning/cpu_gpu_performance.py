@@ -6,7 +6,7 @@
 多个gpu就是将需要在每个gpu处处理的函数，放在指定的gpu设备中，在最后都要调用tf.Session
 '''
 import numpy as np
-import tensorflow as tf
+import tensorflow_pratice as tf
 from  datetime import datetime
 
 #gpu和cpu对比
