@@ -94,18 +94,74 @@ def insert_sort_pra():
 排序过程：
     基本思想是：将数组列在一个表中，并对列分别进行插入排序，重复这个过程，不过每次用更长的列来进行，（步长更长了，列数更少了），最后整个表就只有一列了
     将数组转换至表是为了更好的理解这算法，算法本身还是使用数组进行排序 
+    gap：每次按照折半的情况进行
+    
+时间复杂度：
+    最优时间复杂度：根据步长序列的不同而不同
+    最坏时间复杂度：步长为1时，O(n^2)
+稳定性：因为值会被分为几部分，所以相同的值会发生位置的改变，所以是不稳定的。
+    
 '''
 def shell_sort(alist):
     '''
 
     :return:
     '''
+    #gap变化到1之前，插入算法执行的次数
+    gap = len(alist) // 2
+    while gap>=1:
+        for j in range(gap,len(alist)):  #和插入排序类似只是步长变为了gap
+            i = j
+            while i>0:
+                if alist[i]<alist[i-gap]:
+                    alist[i],alist[i-gap] = alist[i-gap],alist[i]
+                    i-=gap
+                else:
+                    break
+        gap//=2 #步长每次都缩短
+
+def shell_sort_pra():
+    alist = [2, 3, 6, 3, 6, 4, 7, 3, 34, 56, 89, 90]
+    shell_sort(alist)
+    print(alist)
 
 
+'''
+快速排序
+    将第一个值找出来，通过这个值，将整个序列分为两部分，两部分一边都比这个值小，一边都比这个值大
 
+时间复杂度：
+    最优时间复杂度：
+
+稳定性：
+'''
+def quick_sort(alist,first,last):
+    if first>=last:
+        return 1
+    low = first
+    high = last
+    middle_value = alist[low]
+    while low<high:
+        #让high的游标左移
+        while low<high and alist[high]>=middle_value:
+            high-=1
+        alist[low]=alist[high]
+        #让low的游标右移
+        while low<high and alist[low]<middle_value:
+            low+=1
+        alist[high]=alist[low]
+    #对low左边的进行排序
+    quick_sort(alist,first,low-1)
+    #对low右边的进行排序
+    quick_sort(alist,low+1,last)
+
+def quick_sort_pra():
+    alist = [2, 3, 6, 3, 6, 4, 7, 3, 34, 56, 89, 90,90]
+    quick_sort(alist,0,len(alist)-1)
+    print(alist)
 
 
 
 
 if __name__=='__main__':
-    select_sort_pra()
+    quick_sort_pra()
