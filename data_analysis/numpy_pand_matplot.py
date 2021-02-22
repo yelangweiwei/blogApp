@@ -323,6 +323,8 @@ pandas
     series：一维带标签的数组
     dataframe:二维的series数组
     
+    dataframe和series的关系:series可以传入字典，dataframe也可以，series是dataframe的子类
+    nan的值不参与均值的计算
 '''
 import pandas as pd
 import string
@@ -361,10 +363,139 @@ def pd_pra():
     # print(data)
 
     #dataframe,
-    t = pd.DataFrame(np.arange(12).reshape(3,4),)
-    print(t.shape)
-    print(type(t))
-    print(t)
+    # t = pd.DataFrame(np.arange(12).reshape(3,4),columns=['first','second','third','forth'],index=['a','b','c'])
+    # print(t.shape)
+    # print(type(t))
+    # print(t)
+    # #这种list中的值是不能有缺省值的
+    d1 = {'name':['小名','小红'],'age':[20,21],'sex':['male','female']}
+    t1 = pd.DataFrame(d1)
+    # print(t1)
+    #这种没有的值会被nan占位
+    d2 = [{'name':'小名','age':21,'sex':'female'},{'name':'小红','age':35,'sex':'male'}]
+    t2 = pd.DataFrame(d2)
+    # print(t2)
+    # print(t2.shape)
+    # print(t2.dtypes)
+    # print(t2.columns)
+    # print(t2.index)
+    # print(t2.head(1)) #显示头2行
+    # print(t2.tail(1)) #显示后两行
+    # print(t2.info())
+    # print(t1.describe())  #这个描述的信息，对于dataFrame填充的信息不能是list，否则出现问题
+
+    #统计出现次数最高的,按照列排序
+    # t3 = t2.sort_values(by='age',ascending=False)
+    # print(t3)
+    # print(t3.head(1))
+
+    #索引,取行或者列的注意事项：方括号写数字表示取行，对行进行操作，写字符串表示取列索引，可以直接取列
+    # print(t2['age'])
+    # print(type(t2['age']))
+    # print(t2['age'][0])
+    # print(type(t2['age'][0]))
+    # print(t2[:1]['age'])
+    # print(type(t2[:1]['age']))
+
+    #同时取某些行，loc通过标签索引行数据  2，iloc通过数字获取行数据
+    t3 = pd.DataFrame(np.arange(12).reshape(3,4),index=list('abc'),columns=list('abcd')).astype(float)
+    # print(t3)
+    # print(t3.loc['a'])  #通过行标签获取数据
+    # print(t3.iloc[0])   #通过数字行序号获取数据
+    # print(t3.loc[:,['a','b']])  #通过行标签获取数据
+    # print(t3.iloc[:,[1,2]])    #通过行序号获取数据
+    #
+    # print(t3.iloc[:2,1:])
+    #
+
+
+    #bool索引
+    # print(t3[(t3['a']>2) & (t3['a']<8)])
+    # print(t3.info().str)
+    # #赋值
+    # t3.iloc[:2, 1] = np.NAN
+    # t3.iloc[:2, 1] =0
+    # print(t3.iloc[:2, 1:])
+    # print(t3)
+    # print(t3.loc['a'].mean())  #如果行中有nan，这个值是不参与计算的，但是0是参与计算的
+
+    #缺失值处理
+    # print(pd.isnull(t3))
+    # print(pd.notnull(t3))
+
+    # t3[pd.isnull(t3['b'])]=3  #将null的列进行赋值
+    # t3[pd.isnull(t3)]=3
+
+    # print('--------------')
+    #删除null
+    # print(t3.dropna(axis=0,how='all'))  #删除全部为nan的
+    # print(t3.dropna(axis=0,how='any'))  #删除部分为nan的
+    # print(t3.dropna(axis=0,how='any',inplace=True))
+
+    #填充,将nan的填充为100
+    print(t3.fillna(100))
+    t3['b']=t3['b'].fillna(t3.mean())
+
+    # print(t3['a'].values)
+    print(t3['a'].unique())  #在列表中出现唯一的的值
+
+
+
+'''
+字符串离散化的案例
+'''
+def str_pra():
+    # a_list = 'abd'
+    # b_list = 'afx'
+    # c_list = 'xbm'
+    # d_list = 'afc'
+    # e_list = 'ybc'
+    # temp_list = [list(x) for x in [a_list,b_list,c_list,d_list,e_list]]
+    # gener_list =list(sorted(set([x for j in temp_list for x in j ])))
+    # print(gener_list)
+    # t = pd.DataFrame(np.zeros((5,len(gener_list))),columns=gener_list)
+    # #赋值，给每个位置赋值
+    # for i in range(5):
+    #     t.loc[i,temp_list[i]]=1
+    # print(t)
+    #
+    # #统计每个分类的求和
+    # t_sum = t.sum(axis=0)  #按照列求和
+    # #排序
+    # t_sort = t_sum.sort_values()
+    # _x = t_sort.index
+    # print(_x)
+    # _y = t_sort.values
+    # print(_y)
+    # #画图
+    # plt.figure(figsize=(20,8),dpi=80)
+    # plt.bar(range(len(_x)),_y,width=0.5)
+    # plt.xticks(range(len(_x)),_x)
+    # plt.show()
+
+
+    #数据合并join
+    df1 = pd.DataFrame(np.ones((2,4)),columns=list('abcd'),index=list('AB'))
+    print(df1)
+    # df2 = pd.DataFrame(np.zeros((3,3)),columns=list('xyz'),index=list('CDE'))
+    # print(df2)
+    # df3 = df2.join(df1)  #列是两个dataframe的组合,列中不能有重复的，行是df2的序号,
+    # print(df3)
+
+    df4 =pd.DataFrame(np.arange(9).reshape(3,3),columns=list('xya'),index=list('ABC'))
+    print(df4)
+    #按照列进行合并merge,内连接的操作
+    print(df1.merge(df4,on='a'))
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -373,7 +504,8 @@ def pd_pra():
 
 
 if __name__=='__main__':
-    pd_pra()
+    str_pra()
+
 
 
 
