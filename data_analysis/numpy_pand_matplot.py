@@ -476,7 +476,7 @@ def str_pra():
 
     #数据合并join
     df1 = pd.DataFrame(np.ones((2,4)),columns=list('abcd'),index=list('AB'))
-    print(df1)
+    # print(df1)
     # df2 = pd.DataFrame(np.zeros((3,3)),columns=list('xyz'),index=list('CDE'))
     # print(df2)
     # df3 = df2.join(df1)  #列是两个dataframe的组合,列中不能有重复的，行是df2的序号,
@@ -485,15 +485,73 @@ def str_pra():
     df4 =pd.DataFrame(np.arange(9).reshape(3,3),columns=list('xya'),index=list('ABC'))
     print(df4)
     #按照列进行合并merge,内连接的操作
-    print(df1.merge(df4,on='a'))
+    # print(df1.merge(df4,on='a'))
+
+
+    #索引和符合索引
+    # print(df4.index)
+    # print(df4.values)
+    # print(df4.columns)
+    # # print(df4.reindex(list('abc')))  #现在的索引都是新的，没有原来的了，所以就没有这个值了
+    # # print(df4.reindex(list('ABc')))  #索引一样的，值还在，新的索引，就没有值了
+    # # print(df4.set_index('a'))  #指定某一列设置为索引
+    # # print(df4.set_index('x'))  #将x列设置为索引列
+    # print(df4.set_index('x').index.unique()) #设置index的唯一值,index可以有形同的
+    # print(df4.set_index(['x','y']))  #设置索引，要使用[]
+    # print(df4.set_index((['x','y']),drop=True).index)
+    # print(df4.set_index((['x','y']),drop=False).index)
+    # b  = df4.set_index((['x','y']),drop=False)
+    print('---------------------b')
+    b  = df4.set_index((['x','y']),drop=True)  #drop将设置为索引的，删掉
+    print(b)
+    c = b['a']
+    print('---------------------c')
+    print(c.index)
+    print(c.swaplevel())  #交换的是索引
 
 
 
+'''
+时间序列
+'''
+def time_series():
+    # time_v = pd.date_range(start='20171230',end='20181130',freq='10D')
+    time_1 = pd.to_datetime('20171230',format='%Y-%m-%d')
+    print(time_1)
+    time_v = pd.date_range(start='2017/12/30',freq='D',periods=10)  #表示从当前时间到当前10天的日期
+    print(time_v)
+
+    #重采样，指的是将时间序列从一个频率转换为另一个频率进行处理的过程，将高频率的数据转换为低频率的数据为降采样，低频率的数据转换为高频率的数据为升采样
 
 
+def pm25_pra():
+    path = os.path.dirname(os.path.realpath(__file__))+'/data/numpy_pand_mat_data/BeijingPM20100101_20151231.csv'
+    df = pd.read_csv(path)
+    # print(df.head(5))
+    # print(df.info())
+    #把分开的时间字符串通过periodIndex转换为pandas的时间类型
+    period = pd.PeriodIndex(year=df['year'],month=df['month'],day=df['day'],hour=df['hour'],freq='H')
+    # print(type(period))
+    # print(period)
 
+    df['datetime']=period
+    # print(df.head(5))
+    #把datetime设置为索引
+    df.set_index('datetime',inplace=True)
+    #进行降采样
+    df = df.resample('M').mean()
+    print(df.shape)
 
+    #处理缺失数据,删除缺失数据
+    data=df['PM_US Post'].dropna()
 
+    plt.figure(figsize=(20,8),dpi=80)
+    _x = data.index
+    _x = [i.strftime('%y%m%d') for i in _x]
+    _y = data.values
+    plt.plot(range(len(_x)),_y)
+    plt.xticks(range(0,len(_x),20),_x[::20],rotation=45)
+    plt.show()
 
 
 
@@ -504,7 +562,7 @@ def str_pra():
 
 
 if __name__=='__main__':
-    str_pra()
+    pm25_pra()
 
 
 
