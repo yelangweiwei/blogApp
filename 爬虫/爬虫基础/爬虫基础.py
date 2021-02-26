@@ -55,21 +55,29 @@ class TiebaSpider(object):
 
 def get_pra():
     tieba_name = '李毅'
-    tieba_spider = TiebaSpider(tieba_name,data)
+    tieba_spider = TiebaSpider(tieba_name)
     tieba_spider.run()
 
+'''
+代理地址：
+    
+'''
 def post_pra():
-    data = {
-        'from': 'zh',
-        'to': 'en',
-        'query': '人生苦短,我用Python',
-        'transtype': 'translang',
-        'simple_means_flag': '3',
-        'sign': '46544.284385',
-        'token': 'ae09eb7b550489e6b1b8f74d63b60ffa',
-        'domain': 'common',
-    }
-    headers = {'User-Agent':'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36'}
+
+    #官方进行了防爬机制
+    # post_data = {
+    #     'from': 'zh',
+    #     'to': 'en',
+    #     'query': '人生苦短,我用python',
+    #     # 'token': '1118c8eb90a65d1d166811d9bf260c0f',
+    # }
+    # headers = {"User-Agent":"Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Mobile Safari/537.36"}
+    # post_url = "https://fanyi.baidu.com/basetrans"
+    # r = requests.post(post_url,headers=headers,data=post_data)
+    # print(r.content.decode())
+
+
+    #根据汉字和英文自动进行转换
 
 
 
@@ -77,3 +85,4 @@ def post_pra():
 
 
 if __name__ == '__main__':
+    post_pra()
